@@ -1,10 +1,10 @@
 /* ==========================================================
    FundSpark — Shared Components (navbar / footer / sidebar)
-   Reads: window.FS_BASE ("" or "../"), body[data-active], body[data-role]
+   Reads: FS_BASE / window.FS_BASE ("" or "../"), body[data-active], body[data-role]
    ========================================================== */
 
 (function(){
-  const BASE = window.FS_BASE || "";
+  const BASE = window.FS_BASE || (typeof FS_BASE !== "undefined" ? FS_BASE : "");
   const active = document.body.getAttribute('data-active') || "";
 
   const publicLinks = [
@@ -157,7 +157,7 @@
       <a href="${BASE}index.html" class="brand"><span class="mark"><i data-lucide="zap"></i></span> FundSpark</a>
       ${items}
       <div class="sidebar-foot">
-        <a href="${BASE}login.html" class="side-link" data-logout><i data-lucide="log-out"></i><span>Log Out</span></a>
+        <a href="${BASE}index.html" class="side-link" data-logout><i data-lucide="log-out"></i><span>Log Out</span></a>
       </div>
     </aside>
     <div class="sidebar-overlay" id="sidebarOverlay"></div>`;
@@ -177,7 +177,7 @@
       <div class="topbar-actions">
         <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode"><i data-lucide="moon"></i></button>
         <button class="btn-icon icon-btn-bell" aria-label="Notifications"><i data-lucide="bell"></i><span class="dot"></span></button>
-        <a href="${BASE}login.html" class="btn-icon" data-logout title="Log Out" aria-label="Log Out"><i data-lucide="log-out"></i></a>
+        <a href="${BASE}index.html" class="btn btn-outline btn-sm logout-topbar" data-logout title="Log Out" aria-label="Log Out"><i data-lucide="log-out"></i><span>Log Out</span></a>
         <div class="user-chip">
           <div class="avatar">${init}</div>
           <div>

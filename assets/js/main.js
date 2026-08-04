@@ -24,7 +24,8 @@ function fsLogout(e){
   localStorage.removeItem('fs-user');
   sessionStorage.removeItem('fs-user');
   fsToast('Logged out successfully.','success');
-  setTimeout(()=>{ location.href = (window.FS_BASE || '') + 'login.html'; }, 450);
+  const base = window.FS_BASE || (typeof FS_BASE !== 'undefined' ? FS_BASE : '');
+  setTimeout(()=>{ location.href = base + 'index.html'; }, 450);
 }
 
 /* ---------- Toasts ---------- */
