@@ -10,7 +10,7 @@ A modern, responsive frontend prototype for a crowdfunding platform connecting s
 <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black" />
 <img src="https://img.shields.io/badge/Chart.js-FF6384?style=flat-square&logo=chartdotjs&logoColor=white" />
 <img src="https://img.shields.io/badge/status-frontend%20prototype-blue?style=flat-square" />
-<img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" />
+
 
 </div>
 
