@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Startups — FundSpark Admin</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="startups">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head"><div><h1>Startups</h1><p class="text-muted">All campaigns published on the platform.</p></div></div>
+
+      <div class="card card-pad mb-24" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+        <div class="input-icon" style="flex:1;min-width:220px;"><i data-lucide="search" style="width:17px;height:17px;"></i><input class="form-control" id="sSearch" placeholder="Search startups..."></div>
+        <select class="form-control" id="sVerified" style="max-width:180px;"><option value="">All Startups</option><option value="1">Verified only</option><option value="0">Unverified only</option></select>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Startup</th><th>Category</th><th>Raised / Goal</th><th>Score</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="startupRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+FS_MOUNT.dashboard('admin','Karan Bhatt','KB');
+let st = {search:"", verified:""};
+function render(){
+  let list = FS_STARTUPS.filter(s=>{
+    if(st.verified==='1' && !s.verified) return false;
+    if(st.verified==='0' && s.verified) return false;
+    if(st.search && !(s.name+s.founder).toLowerCase().includes(st.search.toLowerCase())) return false;
+    return true;
+  });
+  document.getElementById('startupRows').innerHTML = list.map(s=>{
+    const pct = fsPct(s.raised, s.goal);
+    return `<tr><td><div class="row-flex"><div class="startup-logo" style="position:static;width:36px;height:36px;border-radius:10px;font-size:12px;background:${s.color}22;color:${s.color};">${s.logo}</div>
+      <div><b style="font-size:13.5px;display:block;">${s.name}</b><span class="text-sm text-muted">${s.founder}</span></div></div></td>
+      <td>${s.category}</td>
+      <td><b>${fsCurrency(s.raised)}</b> <span class="text-muted">/ ${fsCurrency(s.goal)}</span><div class="progress mt-8" style="width:110px;"><div class="progress-bar" style="width:${pct}%;"></div></div></td>
+      <td><span class="badge badge-primary">${s.score}</span></td>
+      <td><span class="badge ${s.verified?'badge-success':'badge-warning'}">${s.verified?'Verified':'Unverified'}</span></td>
+      <td><div class="flex gap-8">
+        <a href="../startup-details.html?id=${s.id}" class="btn-icon" title="View"><i data-lucide="eye" style="width:14px;height:14px;"></i></a>
+        ${!s.verified? `<button class="btn-icon" title="Verify" onclick="fsToast('${s.name} has been verified.','success')"><i data-lucide="badge-check" style="width:14px;height:14px;"></i></button>`:''}
+        <button class="btn-icon" title="Remove" onclick="fsToast('${s.name} flagged for removal.','error')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+      </div></td></tr>`;
+  }).join('');
+  if(window.lucide) lucide.createIcons();
+}
+document.getElementById('sSearch').addEventListener('input', e=>{st.search=e.target.value; render();});
+document.getElementById('sVerified').addEventListener('change', e=>{st.verified=e.target.value; render();});
+window.FS_AFTER_MOUNT = render;
+</script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wishlist — FundSpark</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="wishlist">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head"><div><h1>Wishlist</h1><p class="text-muted">Startups you've bookmarked to review later.</p></div></div>
+      <div class="grid-12" id="wishGrid"></div>
+      <div class="empty-state" id="wishEmpty" style="display:none;"><div class="empty-icon"><i data-lucide="heart"></i></div><h4>Your wishlist is empty</h4><p>Bookmark startups while browsing to save them here.</p><a href="browse.html" class="btn btn-primary btn-sm">Browse Startups</a></div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+FS_MOUNT.dashboard('investor','Arjun Malhotra','AM');
+const wishItems = FS_STARTUPS.slice(0,6);
+function card(s){
+  const pct = fsPct(s.raised, s.goal);
+  return `<div class="card startup-card hover-lift" style="grid-column:span 4;">
+    <div class="startup-cover" style="background:linear-gradient(135deg, ${s.color}, var(--secondary));">
+      <div class="startup-actions"><button class="icon-btn active" onclick="this.closest('.startup-card').remove(); fsToast('Removed from wishlist.','info');"><i data-lucide="heart" style="width:16px;height:16px;fill:currentColor;"></i></button></div>
+      <div class="startup-logo">${s.logo}</div>
+    </div>
+    <div class="startup-body"><span class="startup-cat">${s.category}</span><h4 class="startup-name">${s.name}</h4>
+    <div class="progress"><div class="progress-bar" style="width:${pct}%;"></div></div>
+    <div class="startup-footer"><span class="text-sm text-muted">${pct}% funded</span><a href="../startup-details.html?id=${s.id}" class="btn btn-outline btn-sm">View</a></div></div></div>`;
+}
+document.getElementById('wishGrid').innerHTML = wishItems.map(card).join('');
+window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); };
+</script>
+</body>
+</html>

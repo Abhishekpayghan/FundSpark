@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Startup — FundSpark</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="create-startup">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap" style="max-width:880px;">
+      <div class="page-head"><div><h1>Create Startup</h1><p class="text-muted">Publish a new campaign for investors to discover.</p></div></div>
+
+      <div class="pill-nav mb-24">
+        <span class="pill active">1. Basics</span>
+        <span class="pill">2. Media</span>
+        <span class="pill">3. Funding</span>
+        <span class="pill">4. Team</span>
+      </div>
+
+      <form onsubmit="event.preventDefault(); fsToast('Startup submitted for admin approval.','success'); setTimeout(()=>location.href='my-startups.html',900);">
+        <div class="card card-pad mb-24">
+          <h4>Basic Information</h4>
+          <div class="form-row">
+            <div class="form-group"><label>Startup Name</label><input class="form-control" required placeholder="e.g. AgroSense"></div>
+            <div class="form-group"><label>Category</label>
+              <select class="form-control" required><option value="">Select a category</option></select>
+            </div>
+          </div>
+          <div class="form-group"><label>One-line Tagline</label><input class="form-control" required placeholder="Describe your startup in one sentence"></div>
+          <div class="form-group"><label>Detailed Description</label><textarea class="form-control" rows="4" required placeholder="Explain your startup, the problem, and the solution"></textarea></div>
+          <div class="form-row">
+            <div class="form-group"><label>Location</label><input class="form-control" placeholder="City, State"></div>
+            <div class="form-group"><label>Website (optional)</label><input class="form-control" placeholder="https://"></div>
+          </div>
+        </div>
+
+        <div class="card card-pad mb-24">
+          <h4>Media &amp; Documents</h4>
+          <div class="form-group"><label>Startup Logo</label><div class="upload-box"><i data-lucide="image-up"></i><p class="mt-8" style="margin:8px 0 0;">Click or drag to upload logo (PNG/JPG, max 2MB)</p></div></div>
+          <div class="form-group"><label>Cover / Gallery Images</label><div class="upload-box"><i data-lucide="images"></i><p class="mt-8" style="margin:8px 0 0;">Upload up to 6 images</p></div></div>
+          <div class="form-group"><label>Pitch Video</label><div class="upload-box"><i data-lucide="video"></i><p class="mt-8" style="margin:8px 0 0;">Upload a pitch video (MP4, max 100MB)</p></div></div>
+          <div class="form-group"><label>Business Plan (PDF)</label><div class="upload-box"><i data-lucide="file-text"></i><p class="mt-8" style="margin:8px 0 0;">Upload your business plan document</p></div></div>
+        </div>
+
+        <div class="card card-pad mb-24">
+          <h4>Funding Details</h4>
+          <div class="form-row">
+            <div class="form-group"><label>Funding Goal (₹)</label><input class="form-control" type="number" required placeholder="e.g. 2500000"></div>
+            <div class="form-group"><label>Campaign Deadline</label><input class="form-control" type="date" required></div>
+          </div>
+          <div class="form-group"><label>Funding Usage Breakdown</label>
+            <div class="form-row">
+              <input class="form-control" placeholder="Product Development %" value="40">
+              <input class="form-control" placeholder="Marketing %" value="25">
+            </div>
+            <div class="form-row mt-16">
+              <input class="form-control" placeholder="Hiring %" value="25">
+              <input class="form-control" placeholder="Operations %" value="10">
+            </div>
+          </div>
+        </div>
+
+        <div class="card card-pad mb-24">
+          <h4>Team Members</h4>
+          <div id="teamRows">
+            <div class="form-row mb-16"><input class="form-control" placeholder="Team member name"><input class="form-control" placeholder="Role"></div>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('teamRows').insertAdjacentHTML('beforeend','<div class=\'form-row mb-16\'><input class=\'form-control\' placeholder=\'Team member name\'><input class=\'form-control\' placeholder=\'Role\'></div>')"><i data-lucide="plus"></i> Add Member</button>
+        </div>
+
+        <div class="flex gap-12 justify-between">
+          <button type="button" class="btn btn-ghost" onclick="fsToast('Draft saved.','info')"><i data-lucide="save"></i> Save as Draft</button>
+          <button type="submit" class="btn btn-primary btn-lg"><i data-lucide="send"></i> Submit for Approval</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+FS_MOUNT.dashboard('founder','Riya Kulkarni','RK');
+window.FS_AFTER_MOUNT = function(){
+  document.querySelector('select.form-control').innerHTML = '<option value="">Select a category</option>' + FS_CATEGORIES.map(c=>`<option>${c.name}</option>`).join('');
+  if(window.lucide) lucide.createIcons();
+};
+</script>
+</body>
+</html>

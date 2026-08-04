@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notifications — FundSpark</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<style>.notif-row{display:flex;gap:14px;padding:16px;border-radius:14px;transition:.18s ease;}
+.notif-row:hover{background:var(--gradient-soft);}
+.notif-row.unread{background:var(--gradient-soft);}
+.notif-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}</style>
+</head>
+<body data-active="notifications">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head">
+        <div><h1>Notifications</h1><p class="text-muted">Updates on your investments and watchlist.</p></div>
+        <button class="btn btn-outline btn-sm" onclick="document.querySelectorAll('.notif-row').forEach(r=>r.classList.remove('unread'));fsToast('All notifications marked as read.','success')">Mark all as read</button>
+      </div>
+      <div class="card card-pad" id="notifList"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+FS_MOUNT.dashboard('investor','Arjun Malhotra','AM');
+const investorNotifs = [
+  {icon:"badge-check", color:"success", title:"Campaign verified", text:"NimbusStack, a startup on your wishlist, has been verified.", time:"20 min ago", unread:true},
+  {icon:"clock", color:"warning", title:"Deadline approaching", text:"PayNest's campaign closes in 6 days — you're on the wishlist.", time:"2 hr ago", unread:true},
+  {icon:"trending-up", color:"primary", title:"Milestone reached", text:"AgroSense crossed 75% of its funding goal.", time:"5 hr ago", unread:true},
+  {icon:"message-circle", color:"secondary", title:"Reply to your comment", text:"The founder of CredSecure replied to your question.", time:"1 day ago", unread:false},
+  {icon:"star", color:"warning", title:"New startup in FinTech", text:"A new verified campaign matches your interests.", time:"3 days ago", unread:false},
+];
+const colorMap = {success:'#22C55E', primary:'#2563EB', secondary:'#7C3AED', warning:'#F59E0B'};
+document.getElementById('notifList').innerHTML = investorNotifs.map(n=>`
+  <div class="notif-row ${n.unread?'unread':''}">
+    <div class="notif-icon" style="background:${colorMap[n.color]}22;color:${colorMap[n.color]};"><i data-lucide="${n.icon}" style="width:18px;height:18px;"></i></div>
+    <div style="flex:1;"><b style="font-size:14px;">${n.title}</b><p class="text-sm" style="margin:4px 0;">${n.text}</p><span class="text-sm text-muted">${n.time}</span></div>
+  </div>`).join('');
+window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); };
+</script>
+</body>
+</html>

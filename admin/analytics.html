@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics — FundSpark Admin</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="analytics">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head"><div><h1>Platform Analytics</h1><p class="text-muted">Growth and engagement across FundSpark.</p></div></div>
+
+      <div class="panel-grid">
+        <div class="card chart-card"><div class="chart-head"><h4 style="margin:0;font-size:15px;">User Growth</h4></div><div class="chart-canvas-wrap"><canvas id="userGrowth"></canvas></div></div>
+        <div class="card chart-card"><div class="chart-head"><h4 style="margin:0;font-size:15px;">Founders vs Investors</h4></div><div class="chart-canvas-wrap" style="height:230px;"><canvas id="ratioChart"></canvas></div></div>
+      </div>
+
+      <div class="panel-grid mt-24">
+        <div class="card chart-card"><div class="chart-head"><h4 style="margin:0;font-size:15px;">Monthly Funding Volume (₹Cr)</h4></div><div class="chart-canvas-wrap"><canvas id="volChart"></canvas></div></div>
+        <div class="card chart-card"><div class="chart-head"><h4 style="margin:0;font-size:15px;">Category Distribution</h4></div><div class="chart-canvas-wrap" style="height:230px;"><canvas id="catChart"></canvas></div></div>
+      </div>
+
+      <div class="card card-pad mt-24">
+        <h4 style="font-size:15px;">Top Performing Categories</h4>
+        <div class="table-wrap">
+          <table class="data-table"><thead><tr><th>Category</th><th>Campaigns</th><th>Total Raised</th><th>Success Rate</th></tr></thead>
+          <tbody>
+            <tr><td>FinTech</td><td>57</td><td>₹1.4 Cr</td><td><span class="badge badge-success">94%</span></td></tr>
+            <tr><td>SaaS</td><td>52</td><td>₹1.1 Cr</td><td><span class="badge badge-success">91%</span></td></tr>
+            <tr><td>Healthcare</td><td>48</td><td>₹0.9 Cr</td><td><span class="badge badge-success">88%</span></td></tr>
+            <tr><td>E-commerce</td><td>41</td><td>₹0.6 Cr</td><td><span class="badge badge-warning">76%</span></td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/charts.js"></script>
+<script>
+FS_MOUNT.dashboard('admin','Karan Bhatt','KB');
+window.FS_AFTER_MOUNT = function(){
+  if(window.lucide) lucide.createIcons();
+  fsLineChart(document.getElementById('userGrowth'), ['Feb','Mar','Apr','May','Jun','Jul'], [{label:'Users', data:[2100,2800,3400,4100,4800,5482], color:'#2563EB'}]);
+  fsDoughnut(document.getElementById('ratioChart'), ['Investors','Founders'], [5170,312], ['#7C3AED','#2563EB']);
+  fsBarChart(document.getElementById('volChart'), ['Feb','Mar','Apr','May','Jun','Jul'], [1.1,1.8,2.6,3.4,4.3,5.2], '#22C55E');
+  fsDoughnut(document.getElementById('catChart'), ['FinTech','Healthcare','Agri','SaaS','Other'], [26,19,16,18,21], ['#2563EB','#EF4444','#22C55E','#7C3AED','#F59E0B']);
+};
+</script>
+</body>
+</html>

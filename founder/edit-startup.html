@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edit Startup — FundSpark</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="my-startups">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap" style="max-width:880px;">
+      <div class="page-head">
+        <div><h1 id="editTitle">Edit Startup</h1><p class="text-muted">Update your campaign details.</p></div>
+        <span class="badge badge-success">Live Campaign</span>
+      </div>
+
+      <form onsubmit="event.preventDefault(); fsToast('Changes saved successfully.','success');">
+        <div class="card card-pad mb-24">
+          <h4>Basic Information</h4>
+          <div class="form-row">
+            <div class="form-group"><label>Startup Name</label><input class="form-control" id="fName" required></div>
+            <div class="form-group"><label>Category</label><select class="form-control" id="fCat"></select></div>
+          </div>
+          <div class="form-group"><label>One-line Tagline</label><input class="form-control" id="fTagline" required></div>
+          <div class="form-group"><label>Detailed Description</label><textarea class="form-control" rows="4" id="fDesc"></textarea></div>
+        </div>
+        <div class="card card-pad mb-24">
+          <h4>Funding Details</h4>
+          <div class="form-row">
+            <div class="form-group"><label>Funding Goal (₹)</label><input class="form-control" type="number" id="fGoal"></div>
+            <div class="form-group"><label>Amount Raised (₹)</label><input class="form-control" type="number" id="fRaised" disabled></div>
+          </div>
+          <div class="form-group"><label>Campaign Deadline</label><input class="form-control" type="date" id="fDeadline"></div>
+        </div>
+        <div class="card card-pad mb-24">
+          <h4>Media</h4>
+          <div class="form-group"><label>Replace Logo</label><div class="upload-box"><i data-lucide="image-up"></i><p style="margin:8px 0 0;">Click or drag to upload a new logo</p></div></div>
+          <div class="form-group"><label>Replace Gallery Images</label><div class="upload-box"><i data-lucide="images"></i><p style="margin:8px 0 0;">Upload new images</p></div></div>
+        </div>
+        <div class="flex gap-12 justify-between">
+          <button type="button" class="btn btn-ghost" style="color:var(--danger);" onclick="fsToast('Campaign closed.','info')"><i data-lucide="pause-circle"></i> Close Campaign</button>
+          <button type="submit" class="btn btn-primary btn-lg"><i data-lucide="save"></i> Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+FS_MOUNT.dashboard('founder','Riya Kulkarni','RK');
+const id = parseInt(new URLSearchParams(location.search).get('id')) || 1;
+const s = FS_STARTUPS.find(x=>x.id===id) || FS_STARTUPS[0];
+window.FS_AFTER_MOUNT = function(){
+  document.getElementById('editTitle').textContent = 'Edit — ' + s.name;
+  document.getElementById('fName').value = s.name;
+  document.getElementById('fTagline').value = s.tagline;
+  document.getElementById('fDesc').value = s.tagline + ' Currently scaling operations after strong pilot traction.';
+  document.getElementById('fGoal').value = s.goal;
+  document.getElementById('fRaised').value = s.raised;
+  document.getElementById('fDeadline').value = '2026-09-15';
+  const sel = document.getElementById('fCat');
+  sel.innerHTML = FS_CATEGORIES.map(c=>`<option ${c.name===s.category?'selected':''}>${c.name}</option>`).join('');
+  if(window.lucide) lucide.createIcons();
+};
+</script>
+</body>
+</html>

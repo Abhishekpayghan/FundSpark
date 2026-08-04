@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Categories — FundSpark Admin</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="categories">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head">
+        <div><h1>Categories</h1><p class="text-muted">Manage the sectors startups can list under.</p></div>
+        <button class="btn btn-primary" onclick="fsOpenModal('addCatModal')"><i data-lucide="plus"></i> Add Category</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Category</th><th>Startups</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="catRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addCatModal">
+  <div class="modal">
+    <button class="modal-close" onclick="fsCloseModal('addCatModal')"><i data-lucide="x"></i></button>
+    <h3>Add Category</h3>
+    <form onsubmit="event.preventDefault(); fsCloseModal('addCatModal'); fsToast('Category added successfully.','success');">
+      <div class="form-group"><label>Category Name</label><input class="form-control" required placeholder="e.g. Space Tech"></div>
+      <div class="form-group"><label>Icon Keyword (Lucide)</label><input class="form-control" placeholder="e.g. rocket"></div>
+      <button class="btn btn-primary btn-block" type="submit">Add Category</button>
+    </form>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+FS_MOUNT.dashboard('admin','Karan Bhatt','KB');
+document.getElementById('catRows').innerHTML = FS_CATEGORIES.map(c=>`
+  <tr><td><div class="row-flex"><div class="category-icon" style="width:34px;height:34px;margin:0;"><i data-lucide="${c.icon}" style="width:16px;height:16px;"></i></div>${c.name}</div></td>
+  <td>${c.count}</td><td><span class="badge badge-success">Active</span></td>
+  <td><div class="flex gap-8">
+    <button class="btn-icon" title="Edit" onclick="fsToast('Editing ${c.name}.','info')"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>
+    <button class="btn-icon" title="Remove" onclick="fsToast('${c.name} removed.','error')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+  </div></td></tr>`).join('');
+window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); };
+</script>
+</body>
+</html>

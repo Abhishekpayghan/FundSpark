@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FundSpark — Fund Tomorrow's Innovation Today</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="home">
+
+<div id="fs-navbar"></div>
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <div class="container hero-grid">
+    <div class="reveal in">
+      <span class="eyebrow"><i data-lucide="sparkles" style="width:14px;height:14px;"></i> India's startup funding platform</span>
+      <h1>Fund Tomorrow's <span class="text-gradient">Innovation</span> Today</h1>
+      <p class="lead">Discover innovative startups, support entrepreneurs, and help transform groundbreaking ideas into successful businesses.</p>
+      <div class="hero-actions">
+        <a href="explore.html" class="btn btn-primary btn-lg"><i data-lucide="compass"></i> Explore Startups</a>
+        <a href="register.html" class="btn btn-outline btn-lg"><i data-lucide="rocket"></i> Launch Your Startup</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item"><div class="stat-num"><span data-count="500" data-suffix="+">0</span></div><div class="stat-label">Active Startups</div></div>
+        <div class="stat-item"><div class="stat-num">₹<span data-count="5" data-suffix=" Cr+">0</span></div><div class="stat-label">Funding Raised</div></div>
+        <div class="stat-item"><div class="stat-num"><span data-count="5000" data-suffix="+">0</span></div><div class="stat-label">Investors</div></div>
+        <div class="stat-item"><div class="stat-num"><span data-count="92" data-suffix="%">0</span></div><div class="stat-label">Successful Campaigns</div></div>
+      </div>
+    </div>
+    <div class="hero-visual reveal in">
+      <div class="card float-card" style="width:250px;top:10px;left:10px;animation-delay:0s;">
+        <div class="flex items-center gap-12">
+          <div class="startup-logo" style="position:static;background:#2563EB1a;color:#2563EB;">AS</div>
+          <div><b style="font-family:var(--font-head);font-size:14px;">AgroSense</b><div class="text-sm text-muted">Agriculture</div></div>
+        </div>
+        <div class="progress mt-16"><div class="progress-bar" style="width:75%;"></div></div>
+        <div class="funding-row"><span class="text-muted">Raised</span><b>₹18.7L</b></div>
+      </div>
+      <div class="card float-card" style="width:210px;bottom:60px;right:0;animation-delay:1.4s;">
+        <div class="flex items-center gap-8"><i data-lucide="trending-up" style="color:var(--success);"></i><b style="font-size:14px;">+₹4,00,000</b></div>
+        <div class="text-sm text-muted mt-8">New investment · 10 min ago</div>
+      </div>
+      <div class="card float-card" style="width:190px;bottom:0;left:50px;animation-delay:.7s;">
+        <div class="flex items-center gap-8">
+          <div class="rating"><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i> 4.9</div>
+          <span class="badge badge-success"><i data-lucide="badge-check" style="width:12px;height:12px;"></i> Verified</span>
+        </div>
+        <div class="text-sm text-muted mt-8">112 investor reviews</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= FEATURED STARTUPS ================= -->
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Handpicked</span>
+      <h2>Featured Startups</h2>
+      <p>Campaigns gaining momentum this week, verified and ready for your support.</p>
+    </div>
+    <div class="grid-12" id="featuredGrid"></div>
+    <div class="text-center mt-32 reveal">
+      <a href="explore.html" class="btn btn-outline">View All Startups <i data-lucide="arrow-right"></i></a>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CATEGORIES ================= -->
+<section class="section" style="background:var(--card);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Browse by interest</span>
+      <h2>Popular Categories</h2>
+      <p>From agri-tech to fintech — find the sector you believe in.</p>
+    </div>
+    <div class="grid-12" id="categoryGrid"></div>
+  </div>
+</section>
+
+<!-- ================= HOW IT WORKS ================= -->
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Simple process</span>
+      <h2>How It Works</h2>
+      <p>Three steps for founders, three steps for investors.</p>
+    </div>
+    <div class="grid-12">
+      <div class="card step-card hover-lift reveal" style="grid-column:span 4;">
+        <div class="step-num">01</div>
+        <h4 style="font-size:17px;">Create your profile</h4>
+        <p class="text-sm">Founders publish a startup pitch; investors set up an interest profile in minutes.</p>
+      </div>
+      <div class="card step-card hover-lift reveal" style="grid-column:span 4;">
+        <div class="step-num">02</div>
+        <h4 style="font-size:17px;">Discover & evaluate</h4>
+        <p class="text-sm">Browse verified campaigns, review business plans, pitch videos, and traction data.</p>
+      </div>
+      <div class="card step-card hover-lift reveal" style="grid-column:span 4;">
+        <div class="step-num">03</div>
+        <h4 style="font-size:17px;">Fund & grow together</h4>
+        <p class="text-sm">Invest, track campaign progress, and stay connected through milestones.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TOP INVESTORS ================= -->
+<section class="section" style="background:var(--card);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Community leaderboard</span>
+      <h2>Top Investors</h2>
+      <p>The most active backers driving innovation on FundSpark this quarter.</p>
+    </div>
+    <div class="grid-12" id="investorGrid"></div>
+  </div>
+</section>
+
+<!-- ================= SUCCESS STORIES ================= -->
+<section class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Proof it works</span>
+      <h2>Success Stories</h2>
+      <p>Campaigns that hit their goal and scaled beyond it.</p>
+    </div>
+    <div class="grid-12">
+      <div class="card card-pad hover-lift reveal" style="grid-column:span 4;">
+        <span class="badge badge-success mb-16"><i data-lucide="check-circle" style="width:12px;height:12px;"></i> Funded 118%</span>
+        <h4>PayNest closed ₹80L in 9 days</h4>
+        <p class="text-sm">Micro-lending rails for gig workers hit its funding goal before the campaign deadline, backed by 112 investors.</p>
+      </div>
+      <div class="card card-pad hover-lift reveal" style="grid-column:span 4;">
+        <span class="badge badge-success mb-16"><i data-lucide="check-circle" style="width:12px;height:12px;"></i> Funded 104%</span>
+        <h4>NimbusStack scaled to 40 campuses</h4>
+        <p class="text-sm">Student-built infra tooling grew from a campus pilot to nationwide adoption after its FundSpark round.</p>
+      </div>
+      <div class="card card-pad hover-lift reveal" style="grid-column:span 4;">
+        <span class="badge badge-success mb-16"><i data-lucide="check-circle" style="width:12px;height:12px;"></i> Funded 96%</span>
+        <h4>CredSecure hired its first 6 engineers</h4>
+        <p class="text-sm">SMB breach-detection startup used its raise to build out a founding security engineering team.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TESTIMONIALS ================= -->
+<section class="section" style="background:var(--card);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">What people say</span>
+      <h2>Testimonials</h2>
+    </div>
+    <div class="grid-12">
+      <div class="card card-pad reveal" style="grid-column:span 4;">
+        <div class="rating mb-16"><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i></div>
+        <p class="text-sm">"FundSpark made it painless to get in front of investors who actually understood agri-tech. We closed our round in under three weeks."</p>
+        <div class="row-flex mt-16"><div class="avatar">RK</div><div><b style="font-size:14px;">Riya Kulkarni</b><div class="text-sm text-muted">Founder, AgroSense</div></div></div>
+      </div>
+      <div class="card card-pad reveal" style="grid-column:span 4;">
+        <div class="rating mb-16"><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i></div>
+        <p class="text-sm">"The filters and startup scores save me hours of diligence. I've made five investments through the platform so far."</p>
+        <div class="row-flex mt-16"><div class="avatar">AM</div><div><b style="font-size:14px;">Arjun Malhotra</b><div class="text-sm text-muted">Angel Investor</div></div></div>
+      </div>
+      <div class="card card-pad reveal" style="grid-column:span 4;">
+        <div class="rating mb-16"><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i></div>
+        <p class="text-sm">"Campaign analytics gave us clear visibility into what investors cared about — we adjusted our pitch mid-campaign and it worked."</p>
+        <div class="row-flex mt-16"><div class="avatar">SK</div><div><b style="font-size:14px;">Simran Kaur</b><div class="text-sm text-muted">Founder, PayNest</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section class="section">
+  <div class="container" style="max-width:820px;">
+    <div class="section-head reveal">
+      <span class="eyebrow">Questions</span>
+      <h2>Frequently Asked</h2>
+    </div>
+    <div id="faqAccordion"></div>
+    <div class="text-center mt-24 reveal"><a href="faq.html" class="btn btn-outline btn-sm">View full FAQ <i data-lucide="arrow-right"></i></a></div>
+  </div>
+</section>
+
+<!-- ================= NEWSLETTER ================= -->
+<section class="section-sm">
+  <div class="container">
+    <div class="card card-pad reveal" style="background:var(--gradient);border:none;padding:48px;text-align:center;">
+      <h2 style="color:#fff;">Stay ahead of the next big idea</h2>
+      <p style="color:rgba(255,255,255,.85);max-width:480px;margin:0 auto 24px;">Get weekly updates on trending startups, funding milestones, and platform news.</p>
+      <form class="flex gap-12 justify-between" style="max-width:420px;margin:0 auto;" onsubmit="event.preventDefault(); fsToast('Subscribed! Check your inbox for a confirmation email.','success'); this.reset();">
+        <input type="email" required placeholder="you@example.com" class="form-control" style="border:none;">
+        <button class="btn btn-white" type="submit">Subscribe</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<div id="fs-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/main.js"></script>
+<script>
+function renderStars(r){
+  let out='';
+  for(let i=1;i<=5;i++){ out += `<i data-lucide="star" style="width:12px;height:12px;${i<=Math.round(r)?'fill:currentColor;':''}"></i>`; }
+  return out;
+}
+function startupCard(s){
+  const pct = fsPct(s.raised, s.goal);
+  return `
+  <div class="card startup-card hover-lift reveal" style="grid-column:span 3;">
+    <div class="startup-cover" style="background:linear-gradient(135deg, ${s.color}, var(--secondary));">
+      <div class="startup-badges">
+        ${s.verified? `<span class="badge badge-verified"><i data-lucide="badge-check" style="width:12px;height:12px;"></i> Verified</span>`:''}
+        ${s.trending? `<span class="badge" style="background:#fff;color:var(--warning);"><i data-lucide="flame" style="width:12px;height:12px;"></i> Trending</span>`:''}
+      </div>
+      <div class="startup-actions">
+        <button class="icon-btn" onclick="fsToggleBookmark(this,'${s.name}')" aria-label="Bookmark"><i data-lucide="heart" style="width:16px;height:16px;"></i></button>
+        <button class="icon-btn" onclick="fsToast('Share link copied to clipboard.','info')" aria-label="Share"><i data-lucide="share-2" style="width:16px;height:16px;"></i></button>
+      </div>
+      <div class="startup-logo">${s.logo}</div>
+    </div>
+    <div class="startup-body">
+      <div class="flex justify-between items-center">
+        <span class="startup-cat">${s.category}</span>
+        <span class="rating">${renderStars(s.rating)} ${s.rating}</span>
+      </div>
+      <h4 class="startup-name">${s.name}</h4>
+      <p class="startup-founder"><i data-lucide="user" style="width:13px;height:13px;"></i> ${s.founder||''} · ${s.location}</p>
+      <p class="text-sm" style="margin:0;">${s.tagline}</p>
+      <div>
+        <div class="progress"><div class="progress-bar" data-target="${pct}"></div></div>
+        <div class="funding-row"><span><b>${fsCurrency(s.raised)}</b> raised</span><span class="text-muted">${pct}%</span></div>
+      </div>
+      <div class="startup-footer">
+        <span class="text-sm text-muted"><i data-lucide="clock" style="width:13px;height:13px;vertical-align:-2px;"></i> ${s.days} days left</span>
+        <a href="startup-details.html?id=${s.id}" class="btn btn-outline btn-sm">View Details</a>
+      </div>
+    </div>
+  </div>`;
+}
+document.getElementById('featuredGrid').innerHTML = FS_STARTUPS.slice(0,4).map(startupCard).join('');
+
+document.getElementById('categoryGrid').innerHTML = FS_CATEGORIES.slice(0,8).map(c => `
+  <a href="explore.html?category=${encodeURIComponent(c.name)}" class="card category-card hover-lift reveal" style="grid-column:span 3;">
+    <div class="category-icon"><i data-lucide="${c.icon}"></i></div>
+    <h4>${c.name}</h4>
+    <span>${c.count} startups</span>
+  </a>`).join('');
+
+const topInvestors = [
+  {name:"Arjun Malhotra", init:"AM", invested:12, amount:2450000},
+  {name:"Divya Krishnan", init:"DK", invested:9, amount:1980000},
+  {name:"Karan Bhatt", init:"KB", invested:8, amount:1620000},
+  {name:"Wasim Sheikh", init:"WS", invested:6, amount:1150000},
+];
+document.getElementById('investorGrid').innerHTML = topInvestors.map((inv,i) => `
+  <div class="card card-pad hover-lift reveal" style="grid-column:span 3;text-align:center;">
+    <div class="avatar" style="width:56px;height:56px;font-size:18px;border-radius:16px;margin:0 auto 14px;">${inv.init}</div>
+    <h4 style="font-size:15px;margin-bottom:2px;">${inv.name}</h4>
+    <span class="badge badge-secondary">Rank #${i+1}</span>
+    <div class="funding-row mt-16" style="justify-content:center;gap:18px;">
+      <div><b style="display:block;font-family:var(--font-head);">${inv.invested}</b><span class="text-muted">Startups</span></div>
+      <div><b style="display:block;font-family:var(--font-head);">${fsCurrency(inv.amount)}</b><span class="text-muted">Invested</span></div>
+    </div>
+  </div>`).join('');
+
+const faqs = [
+  ["Is FundSpark a real investment platform?","This build is a frontend prototype created for a DBMS college mini-project. All startups, users, and transactions shown are simulated dummy data."],
+  ["How do I list my startup?","Register as a Founder, complete your profile, then use Create Startup to publish your pitch, funding goal, and campaign deadline."],
+  ["How does the funding progress bar work?","It reflects the amount raised against the funding goal in real time as investors commit funds."],
+  ["Can investors track their portfolio?","Yes — the Investor Dashboard shows total investments, wishlist, and an activity timeline across all campaigns."],
+  ["Does FundSpark verify startups?","Admins review submitted campaigns and business plans before granting a Verified badge."],
+];
+document.getElementById('faqAccordion').innerHTML = faqs.map((f,i)=> `
+  <div class="accordion-item ${i===0?'open':''}">
+    <div class="accordion-head">${f[0]} <i data-lucide="chevron-down"></i></div>
+    <div class="accordion-body"><p class="text-sm">${f[1]}</p></div>
+  </div>`).join('');
+
+window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); };
+</script>
+</body>
+</html>

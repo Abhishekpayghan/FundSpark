@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Explore Startups — FundSpark</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<style>
+.explore-layout{display:grid;grid-template-columns:270px 1fr;gap:28px;align-items:start;}
+.filter-block{padding-bottom:20px;margin-bottom:20px;border-bottom:1px solid var(--border);}
+.filter-block:last-child{border:none;}
+.filter-block h5{font-size:13px;margin-bottom:12px;}
+.check-item{display:flex;align-items:center;justify-content:space-between;padding:7px 0;font-size:13.5px;color:var(--text-muted);}
+.range-vals{display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-top:6px;}
+@media(max-width:960px){.explore-layout{grid-template-columns:1fr;} .filter-sidebar{display:none;} .filter-sidebar.open{display:block;}}
+</style>
+</head>
+<body data-active="explore">
+<div id="fs-navbar"></div>
+
+<section class="section-sm" style="padding-bottom:0;">
+  <div class="container">
+    <div class="breadcrumb"><a href="index.html">Home</a> <i data-lucide="chevron-right" style="width:13px;height:13px;"></i> <span>Explore</span></div>
+    <div class="page-head" style="margin-bottom:8px;">
+      <div><h1 style="font-size:30px;">Explore Startups</h1><p>Browse <span id="resultCount">500+</span> campaigns across 16 categories.</p></div>
+    </div>
+    <div class="card card-pad" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+      <div class="input-icon" style="flex:1;min-width:220px;">
+        <i data-lucide="search" style="width:17px;height:17px;"></i>
+        <input class="form-control" id="searchInput" placeholder="Search startups, founders, keywords...">
+      </div>
+      <select class="form-control" id="sortSelect" style="max-width:190px;">
+        <option value="newest">Sort: Newest</option>
+        <option value="trending">Sort: Trending</option>
+        <option value="rated">Sort: Highest Rated</option>
+        <option value="funded">Sort: Most Funded</option>
+      </select>
+      <button class="btn btn-outline" id="mobileFilterBtn" style="display:none;"><i data-lucide="sliders-horizontal"></i> Filters</button>
+    </div>
+  </div>
+</section>
+
+<section class="section-sm">
+  <div class="container explore-layout">
+    <aside class="card card-pad filter-sidebar" id="filterSidebar">
+      <div class="flex justify-between items-center mb-16"><h4 style="font-size:15px;margin:0;">Filters</h4><button class="btn btn-ghost btn-sm" onclick="resetFilters()">Reset</button></div>
+
+      <div class="filter-block">
+        <h5>Category</h5>
+        <div id="categoryFilters"></div>
+      </div>
+      <div class="filter-block">
+        <h5>Funding Goal</h5>
+        <input type="range" min="0" max="10000000" step="500000" id="goalRange" style="width:100%;">
+        <div class="range-vals"><span>₹0</span><span id="goalRangeVal">Any</span></div>
+      </div>
+      <div class="filter-block">
+        <h5>Technology</h5>
+        <div class="pill-nav">
+          <span class="pill active" data-tech="all">All</span>
+          <span class="pill" data-tech="AI/ML">AI/ML</span>
+          <span class="pill" data-tech="IoT">IoT</span>
+          <span class="pill" data-tech="Blockchain">Blockchain</span>
+          <span class="pill" data-tech="Mobile">Mobile</span>
+        </div>
+      </div>
+      <div class="filter-block">
+        <h5>Location</h5>
+        <select class="form-control" id="locationFilter">
+          <option value="">All Locations</option>
+          <option>Maharashtra</option><option>Karnataka</option><option>Telangana</option>
+          <option>Gujarat</option><option>Tamil Nadu</option><option>Kerala</option>
+        </select>
+      </div>
+      <div class="filter-block">
+        <h5>Funding Progress</h5>
+        <div class="check-item"><label><input type="checkbox" class="progressFilter" value="75"> 75% and above</label></div>
+        <div class="check-item"><label><input type="checkbox" class="progressFilter" value="50"> 50% – 75%</label></div>
+        <div class="check-item"><label><input type="checkbox" class="progressFilter" value="0"> Below 50%</label></div>
+      </div>
+      <div class="filter-block">
+        <label class="checkbox-row"><input type="checkbox" id="verifiedOnly"> Verified startups only</label>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="applyFilters()">Apply Filters</button>
+    </aside>
+
+    <div>
+      <div class="grid-12" id="exploreGrid"></div>
+      <div class="empty-state" id="emptyState" style="display:none;grid-column:1/-1;">
+        <div class="empty-icon"><i data-lucide="search-x"></i></div>
+        <h4>No startups match your filters</h4>
+        <p class="text-sm">Try adjusting or resetting your filters.</p>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+</section>
+
+<div id="fs-footer"></div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/main.js"></script>
+<script>
+function renderStars(r){let o='';for(let i=1;i<=5;i++){o+=`<i data-lucide="star" style="width:12px;height:12px;${i<=Math.round(r)?'fill:currentColor;':''}"></i>`;}return o;}
+function startupCard(s){
+  const pct = fsPct(s.raised, s.goal);
+  return `<div class="card startup-card hover-lift" style="grid-column:span 4;">
+    <div class="startup-cover" style="background:linear-gradient(135deg, ${s.color}, var(--secondary));">
+      <div class="startup-badges">${s.verified?`<span class="badge badge-verified"><i data-lucide="badge-check" style="width:12px;height:12px;"></i> Verified</span>`:''}</div>
+      <div class="startup-actions">
+        <button class="icon-btn" onclick="fsToggleBookmark(this,'${s.name}')"><i data-lucide="heart" style="width:16px;height:16px;"></i></button>
+        <button class="icon-btn" onclick="fsToast('Share link copied to clipboard.','info')"><i data-lucide="share-2" style="width:16px;height:16px;"></i></button>
+      </div>
+      <div class="startup-logo">${s.logo}</div>
+    </div>
+    <div class="startup-body">
+      <div class="flex justify-between items-center"><span class="startup-cat">${s.category}</span><span class="rating">${renderStars(s.rating)} ${s.rating}</span></div>
+      <h4 class="startup-name">${s.name}</h4>
+      <p class="startup-founder"><i data-lucide="map-pin" style="width:13px;height:13px;"></i> ${s.location}</p>
+      <p class="text-sm" style="margin:0;">${s.tagline}</p>
+      <div><div class="progress"><div class="progress-bar" data-target="${pct}" style="width:${pct}%;"></div></div>
+      <div class="funding-row"><span><b>${fsCurrency(s.raised)}</b> of ${fsCurrency(s.goal)}</span><span class="text-muted">${pct}%</span></div></div>
+      <div class="startup-footer"><span class="text-sm text-muted"><i data-lucide="clock" style="width:13px;height:13px;vertical-align:-2px;"></i> ${s.days}d left</span>
+      <a href="startup-details.html?id=${s.id}" class="btn btn-outline btn-sm">View Details</a></div>
+    </div></div>`;
+}
+
+let state = { search:"", category:"all", sort:"newest", page:1 };
+const PAGE_SIZE = 9;
+
+document.getElementById('categoryFilters').innerHTML = ['All',...new Set(FS_STARTUPS.map(s=>s.category))].map(c=>
+  `<div class="check-item"><label class="flex items-center gap-8"><input type="radio" name="catf" value="${c}" ${c==='All'?'checked':''} onchange="state.category='${c}';renderGrid();"> ${c}</label></div>`
+).join('');
+
+function getFiltered(){
+  let list = [...FS_STARTUPS];
+  if(state.category && state.category!=='All') list = list.filter(s=>s.category===state.category);
+  if(state.search) list = list.filter(s=> (s.name+s.founder+s.tagline).toLowerCase().includes(state.search.toLowerCase()));
+  if(state.sort==='trending') list.sort((a,b)=> b.trending-a.trending || b.score-a.score);
+  else if(state.sort==='rated') list.sort((a,b)=> b.rating-a.rating);
+  else if(state.sort==='funded') list.sort((a,b)=> fsPct(b.raised,b.goal)-fsPct(a.raised,a.goal));
+  else list.sort((a,b)=> b.id-a.id);
+  return list;
+}
+
+function renderGrid(){
+  const list = getFiltered();
+  document.getElementById('resultCount').textContent = list.length;
+  const start = (state.page-1)*PAGE_SIZE;
+  const pageItems = list.slice(start, start+PAGE_SIZE);
+  const grid = document.getElementById('exploreGrid');
+  grid.innerHTML = pageItems.map(startupCard).join('');
+  document.getElementById('emptyState').style.display = list.length===0 ? 'block' : 'none';
+  renderPagination(list.length);
+  if(window.lucide) lucide.createIcons();
+  fsAnimateProgressBars(grid);
+}
+
+function renderPagination(total){
+  const pages = Math.max(1, Math.ceil(total/PAGE_SIZE));
+  const wrap = document.getElementById('pagination');
+  let html = `<button ${state.page===1?'disabled':''} onclick="state.page--;renderGrid();"><i data-lucide="chevron-left" style="width:15px;height:15px;"></i></button>`;
+  for(let i=1;i<=pages;i++){ html += `<button class="${state.page===i?'active':''}" onclick="state.page=${i};renderGrid();">${i}</button>`; }
+  html += `<button ${state.page===pages?'disabled':''} onclick="state.page++;renderGrid();"><i data-lucide="chevron-right" style="width:15px;height:15px;"></i></button>`;
+  wrap.innerHTML = html;
+}
+
+document.getElementById('searchInput').addEventListener('input', e=>{ state.search=e.target.value; state.page=1; renderGrid(); });
+document.getElementById('sortSelect').addEventListener('change', e=>{ state.sort=e.target.value; renderGrid(); });
+document.getElementById('goalRange').addEventListener('input', e=>{ document.getElementById('goalRangeVal').textContent = fsCurrency(+e.target.value); });
+document.querySelectorAll('[data-tech]').forEach(p=>p.addEventListener('click',()=>{document.querySelectorAll('[data-tech]').forEach(x=>x.classList.remove('active'));p.classList.add('active');}));
+document.getElementById('mobileFilterBtn').addEventListener('click', ()=> document.getElementById('filterSidebar').classList.toggle('open'));
+function applyFilters(){ state.page=1; renderGrid(); fsToast('Filters applied.','success'); }
+function resetFilters(){ state={search:"",category:"all",sort:"newest",page:1}; document.getElementById('searchInput').value=''; document.querySelector('[name=catf]').checked=true; renderGrid(); }
+
+function checkMobile(){ document.getElementById('mobileFilterBtn').style.display = window.innerWidth<=960 ? 'inline-flex':'none'; }
+window.addEventListener('resize', checkMobile); checkMobile();
+
+const urlCat = new URLSearchParams(location.search).get('category');
+if(urlCat) state.category = urlCat;
+
+window.FS_AFTER_MOUNT = function(){
+  renderGrid();
+  if(urlCat){ const r = document.querySelector(`[name=catf][value="${urlCat}"]`); if(r) r.checked=true; }
+  if(window.lucide) lucide.createIcons();
+};
+</script>
+</body>
+</html>

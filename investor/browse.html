@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Browse Startups — FundSpark</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="browse">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head"><div><h1>Browse Startups</h1><p class="text-muted">Find your next investment.</p></div></div>
+
+      <div class="card card-pad mb-24" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+        <div class="input-icon" style="flex:1;min-width:220px;"><i data-lucide="search" style="width:17px;height:17px;"></i><input class="form-control" id="bSearch" placeholder="Search startups..."></div>
+        <div class="pill-nav" id="bCat">
+          <span class="pill active" data-c="All">All</span>
+          <span class="pill" data-c="FinTech">FinTech</span>
+          <span class="pill" data-c="Healthcare">Healthcare</span>
+          <span class="pill" data-c="SaaS">SaaS</span>
+          <span class="pill" data-c="Agriculture">Agriculture</span>
+        </div>
+        <select class="form-control" id="bSort" style="max-width:180px;"><option value="newest">Newest</option><option value="rated">Highest Rated</option><option value="funded">Most Funded</option></select>
+      </div>
+      <div class="grid-12" id="browseGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+FS_MOUNT.dashboard('investor','Arjun Malhotra','AM');
+function renderStars(r){let o='';for(let i=1;i<=5;i++){o+=`<i data-lucide="star" style="width:12px;height:12px;${i<=Math.round(r)?'fill:currentColor;':''}"></i>`;}return o;}
+let st = {search:"",cat:"All",sort:"newest"};
+function card(s){
+  const pct = fsPct(s.raised, s.goal);
+  return `<div class="card startup-card hover-lift" style="grid-column:span 4;">
+    <div class="startup-cover" style="background:linear-gradient(135deg, ${s.color}, var(--secondary));">
+      <div class="startup-badges">${s.verified?`<span class="badge badge-verified"><i data-lucide="badge-check" style="width:12px;height:12px;"></i> Verified</span>`:''}</div>
+      <div class="startup-actions"><button class="icon-btn" onclick="fsToggleBookmark(this,'${s.name}')"><i data-lucide="heart" style="width:16px;height:16px;"></i></button></div>
+      <div class="startup-logo">${s.logo}</div>
+    </div>
+    <div class="startup-body">
+      <div class="flex justify-between items-center"><span class="startup-cat">${s.category}</span><span class="rating">${renderStars(s.rating)} ${s.rating}</span></div>
+      <h4 class="startup-name">${s.name}</h4>
+      <p class="text-sm" style="margin:0;">${s.tagline}</p>
+      <div><div class="progress"><div class="progress-bar" style="width:${pct}%;"></div></div>
+      <div class="funding-row"><span><b>${fsCurrency(s.raised)}</b> of ${fsCurrency(s.goal)}</span><span class="text-muted">${pct}%</span></div></div>
+      <div class="startup-footer"><span class="text-sm text-muted">${s.days}d left</span><a href="../startup-details.html?id=${s.id}" class="btn btn-outline btn-sm">View Details</a></div>
+    </div></div>`;
+}
+function render(){
+  let list = [...FS_STARTUPS];
+  if(st.cat!=='All') list = list.filter(s=>s.category===st.cat);
+  if(st.search) list = list.filter(s=>(s.name+s.tagline).toLowerCase().includes(st.search.toLowerCase()));
+  if(st.sort==='rated') list.sort((a,b)=>b.rating-a.rating);
+  else if(st.sort==='funded') list.sort((a,b)=>fsPct(b.raised,b.goal)-fsPct(a.raised,a.goal));
+  document.getElementById('browseGrid').innerHTML = list.map(card).join('') || `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon"><i data-lucide="search-x"></i></div><h4>No startups found</h4></div>`;
+  if(window.lucide) lucide.createIcons();
+}
+document.getElementById('bSearch').addEventListener('input', e=>{st.search=e.target.value; render();});
+document.getElementById('bSort').addEventListener('change', e=>{st.sort=e.target.value; render();});
+document.getElementById('bCat').addEventListener('click', e=>{ const p=e.target.closest('.pill'); if(!p) return; document.querySelectorAll('#bCat .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active'); st.cat=p.getAttribute('data-c'); render();});
+window.FS_AFTER_MOUNT = render;
+</script>
+</body>
+</html>

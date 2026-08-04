@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Categories — FundSpark</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="categories">
+<div id="fs-navbar"></div>
+
+<header class="hero" style="padding:56px 0 40px;">
+  <div class="container text-center">
+    <span class="eyebrow">16 sectors, 500+ startups</span>
+    <h1 style="font-size:clamp(28px,4vw,42px);">Startup Categories</h1>
+    <p class="lead" style="margin:0 auto;">Explore every sector actively raising funds on FundSpark.</p>
+  </div>
+</header>
+
+<section class="section">
+  <div class="container">
+    <div class="grid-12" id="catFullGrid"></div>
+  </div>
+</section>
+
+<div id="fs-footer"></div>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/main.js"></script>
+<script>
+document.getElementById('catFullGrid').innerHTML = FS_CATEGORIES.map(c => `
+  <a href="explore.html?category=${encodeURIComponent(c.name)}" class="card category-card hover-lift" style="grid-column:span 3;">
+    <div class="category-icon"><i data-lucide="${c.icon}"></i></div>
+    <h4>${c.name}</h4>
+    <span>${c.count} startups</span>
+  </a>`).join('');
+window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); };
+</script>
+</body>
+</html>

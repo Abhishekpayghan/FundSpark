@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About — FundSpark</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="about">
+<div id="fs-navbar"></div>
+
+<header class="hero" style="padding:64px 0;">
+  <div class="container text-center">
+    <span class="eyebrow">Our story</span>
+    <h1 style="font-size:clamp(30px,4.4vw,46px);">Backing the builders of tomorrow</h1>
+    <p class="lead" style="margin:0 auto;">FundSpark exists to close the gap between promising early-stage founders and the investors who want to back them — with transparency at every step.</p>
+  </div>
+</header>
+
+<section class="section">
+  <div class="container grid-12" style="align-items:center;">
+    <div style="grid-column:span 6;">
+      <span class="eyebrow">Our mission</span>
+      <h2>Making startup funding accessible, everywhere</h2>
+      <p>Most crowdfunding platforms concentrate around a handful of metro hubs. FundSpark was designed for founders in tier-2 and tier-3 cities too — verifying campaigns rigorously so investors can back ideas with confidence, no matter where they're built.</p>
+      <div class="grid-12 mt-24">
+        <div style="grid-column:span 6;"><div class="stat-num"><span data-count="500" data-suffix="+">0</span></div><div class="stat-label">Startups funded</div></div>
+        <div style="grid-column:span 6;"><div class="stat-num"><span data-count="5000" data-suffix="+">0</span></div><div class="stat-label">Registered investors</div></div>
+      </div>
+    </div>
+    <div style="grid-column:span 6;">
+      <div class="card card-pad" style="background:var(--gradient-soft);">
+        <div class="grid-12" style="gap:16px;">
+          <div class="card card-pad hover-lift" style="grid-column:span 6;"><i data-lucide="shield-check" style="color:var(--primary);"></i><h4 style="font-size:14px;margin-top:10px;">Verified campaigns</h4><p class="text-sm">Every startup is reviewed before it goes live.</p></div>
+          <div class="card card-pad hover-lift" style="grid-column:span 6;"><i data-lucide="eye" style="color:var(--primary);"></i><h4 style="font-size:14px;margin-top:10px;">Transparent progress</h4><p class="text-sm">Real-time funding and milestone tracking.</p></div>
+          <div class="card card-pad hover-lift" style="grid-column:span 6;"><i data-lucide="users" style="color:var(--primary);"></i><h4 style="font-size:14px;margin-top:10px;">Community driven</h4><p class="text-sm">Comments, ratings, and open Q&amp;A on every pitch.</p></div>
+          <div class="card card-pad hover-lift" style="grid-column:span 6;"><i data-lucide="map" style="color:var(--primary);"></i><h4 style="font-size:14px;margin-top:10px;">Nationwide reach</h4><p class="text-sm">Founders from over 60 Indian cities.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="background:var(--card);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="container">
+    <div class="section-head"><span class="eyebrow">Our team</span><h2>The people behind FundSpark</h2></div>
+    <div class="grid-12" id="teamAbout"></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head"><span class="eyebrow">Our values</span><h2>What we build on</h2></div>
+    <div class="grid-12">
+      <div class="card card-pad hover-lift" style="grid-column:span 3;"><i data-lucide="scale" style="color:var(--primary);"></i><h4 style="font-size:15px;margin-top:12px;">Fairness</h4><p class="text-sm">Equal visibility for every verified founder, regardless of network.</p></div>
+      <div class="card card-pad hover-lift" style="grid-column:span 3;"><i data-lucide="lock" style="color:var(--primary);"></i><h4 style="font-size:15px;margin-top:12px;">Trust</h4><p class="text-sm">Verification and disclosure before any campaign goes live.</p></div>
+      <div class="card card-pad hover-lift" style="grid-column:span 3;"><i data-lucide="lightbulb" style="color:var(--primary);"></i><h4 style="font-size:15px;margin-top:12px;">Innovation</h4><p class="text-sm">We back bold ideas, not just safe ones.</p></div>
+      <div class="card card-pad hover-lift" style="grid-column:span 3;"><i data-lucide="hand-heart" style="color:var(--primary);"></i><h4 style="font-size:15px;margin-top:12px;">Impact</h4><p class="text-sm">Prioritising founders solving real, local problems.</p></div>
+    </div>
+  </div>
+</section>
+
+<div id="fs-footer"></div>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/main.js"></script>
+<script>
+document.getElementById('teamAbout').innerHTML = [
+  {name:"Aarav Mehta", role:"Co-founder & CEO", init:"AM"},
+  {name:"Ira Bose", role:"Co-founder & CPO", init:"IB"},
+  {name:"Rohit Nair", role:"Head of Engineering", init:"RN"},
+  {name:"Tanya Sethi", role:"Head of Investor Relations", init:"TS"},
+].map(m=>`<div class="card card-pad hover-lift text-center" style="grid-column:span 3;">
+  <div class="avatar" style="width:64px;height:64px;font-size:20px;border-radius:18px;margin:0 auto 14px;">${m.init}</div>
+  <h4 style="font-size:15px;margin-bottom:2px;">${m.name}</h4><span class="text-sm text-muted">${m.role}</span>
+</div>`).join('');
+window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); };
+</script>
+</body>
+</html>

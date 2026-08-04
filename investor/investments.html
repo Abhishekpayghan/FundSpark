@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Investments — FundSpark</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="investments">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head"><div><h1>My Investments</h1><p class="text-muted">Every startup you've backed, in one place.</p></div>
+        <button class="btn btn-outline btn-sm" onclick="fsToast('Statement download simulated for this prototype.','info')"><i data-lucide="download"></i> Download Statement</button>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="wallet"></i></div><div class="kpi-value">₹<span data-count="24.5" data-decimals="1" data-suffix="L">0</span></div><div class="kpi-label">Total Invested</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="rocket"></i></div><div class="kpi-value"><span data-count="12">0</span></div><div class="kpi-label">Startups Backed</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="check-circle"></i></div><div class="kpi-value"><span data-count="9">0</span></div><div class="kpi-label">Confirmed</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="clock"></i></div><div class="kpi-value"><span data-count="3">0</span></div><div class="kpi-label">Pending</div></div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Startup</th><th>Category</th><th>Amount</th><th>Date</th><th>Status</th><th></th></tr></thead>
+            <tbody id="invRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+FS_MOUNT.dashboard('investor','Arjun Malhotra','AM');
+const invData = [
+  {s:FS_STARTUPS[0], amount:250000, date:"18 Jul 2026", status:"Confirmed"},
+  {s:FS_STARTUPS[2], amount:400000, date:"09 Jul 2026", status:"Confirmed"},
+  {s:FS_STARTUPS[5], amount:90000, date:"02 Jul 2026", status:"Pending"},
+  {s:FS_STARTUPS[9], amount:180000, date:"25 Jun 2026", status:"Confirmed"},
+  {s:FS_STARTUPS[1], amount:120000, date:"14 Jun 2026", status:"Pending"},
+  {s:FS_STARTUPS[8], amount:60000, date:"02 Jun 2026", status:"Confirmed"},
+];
+document.getElementById('invRows').innerHTML = invData.map(r=>`
+  <tr><td><div class="row-flex"><div class="startup-logo" style="position:static;width:36px;height:36px;border-radius:10px;font-size:12px;background:${r.s.color}22;color:${r.s.color};">${r.s.logo}</div>${r.s.name}</div></td>
+  <td>${r.s.category}</td><td><b>${fsCurrency(r.amount)}</b></td><td>${r.date}</td>
+  <td><span class="badge ${r.status==='Confirmed'?'badge-success':'badge-warning'}">${r.status}</span></td>
+  <td><a href="../startup-details.html?id=${r.s.id}" class="btn-icon"><i data-lucide="arrow-up-right" style="width:14px;height:14px;"></i></a></td></tr>`).join('');
+window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); };
+</script>
+</body>
+</html>

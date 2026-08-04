@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — FundSpark</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="dashboard">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head"><div><h1>Admin Overview</h1><p class="text-muted">Platform health at a glance.</p></div>
+        <a href="campaign-approval.html" class="btn btn-primary"><i data-lucide="badge-check"></i> Review Pending (3)</a>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="users"></i></div><div class="kpi-value"><span data-count="5482">0</span></div><div class="kpi-label">Total Users</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="rocket"></i></div><div class="kpi-value"><span data-count="517">0</span></div><div class="kpi-label">Total Campaigns</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="indian-rupee"></i></div><div class="kpi-value">₹<span data-count="5.2" data-decimals="1" data-suffix=" Cr">0</span></div><div class="kpi-label">Platform Revenue</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="clock"></i></div><div class="kpi-value"><span data-count="3">0</span></div><div class="kpi-label">Pending Approvals</div></div>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);">
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="rocket"></i></div><div class="kpi-value"><span data-count="312">0</span></div><div class="kpi-label">Founders</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="wallet"></i></div><div class="kpi-value"><span data-count="5170">0</span></div><div class="kpi-label">Investors</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="badge-check"></i></div><div class="kpi-value"><span data-count="389">0</span></div><div class="kpi-label">Verified Startups</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="flag"></i></div><div class="kpi-value"><span data-count="7">0</span></div><div class="kpi-label">Flagged Campaigns</div></div>
+      </div>
+
+      <div class="panel-grid">
+        <div class="card chart-card"><div class="chart-head"><h4 style="margin:0;font-size:15px;">Funding Analytics</h4></div><div class="chart-canvas-wrap"><canvas id="fundAnalytics"></canvas></div></div>
+        <div class="card chart-card"><div class="chart-head"><h4 style="margin:0;font-size:15px;">Category Distribution</h4></div><div class="chart-canvas-wrap" style="height:230px;"><canvas id="catDist"></canvas></div></div>
+      </div>
+
+      <div class="panel-grid mt-24">
+        <div class="card card-pad">
+          <div class="chart-head"><h4 style="margin:0;font-size:15px;">Latest Users</h4><a href="users.html" class="text-sm" style="color:var(--primary);font-weight:600;">View all</a></div>
+          <div class="table-wrap"><table class="data-table"><thead><tr><th>User</th><th>Role</th><th>Joined</th></tr></thead><tbody id="latestUsers"></tbody></table></div>
+        </div>
+        <div class="card card-pad">
+          <div class="chart-head"><h4 style="margin:0;font-size:15px;">Pending Campaigns</h4><a href="campaign-approval.html" class="text-sm" style="color:var(--primary);font-weight:600;">Review</a></div>
+          <div id="pendingList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/charts.js"></script>
+<script>
+FS_MOUNT.dashboard('admin','Karan Bhatt','KB');
+
+document.getElementById('latestUsers').innerHTML = FS_USERS.slice(0,5).map(u=>`
+  <tr><td><div class="row-flex"><div class="avatar">${u.init}</div>${u.name}</div></td>
+  <td><span class="badge ${u.role==='Founder'?'badge-primary':'badge-secondary'}">${u.role}</span></td><td>${u.joined}</td></tr>`).join('');
+
+document.getElementById('pendingList').innerHTML = FS_PENDING_CAMPAIGNS.map(c=>`
+  <div class="flex justify-between items-center mb-16">
+    <div><b style="font-size:13.5px;">${c.name}</b><div class="text-sm text-muted">${c.founder} · ${c.category}</div></div>
+    <span class="badge badge-warning">Pending</span>
+  </div>`).join('');
+
+window.FS_AFTER_MOUNT = function(){
+  if(window.lucide) lucide.createIcons();
+  fsLineChart(document.getElementById('fundAnalytics'), ['Feb','Mar','Apr','May','Jun','Jul'], [{label:'Funding (₹Cr)', data:[1.1,1.8,2.6,3.4,4.3,5.2], color:'#2563EB'}]);
+  fsDoughnut(document.getElementById('catDist'), ['FinTech','Healthcare','Agriculture','SaaS','Other'], [26,19,16,18,21], ['#2563EB','#EF4444','#22C55E','#7C3AED','#F59E0B']);
+};
+</script>
+</body>
+</html>

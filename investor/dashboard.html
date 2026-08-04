@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Investor Dashboard — FundSpark</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="dashboard">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head">
+        <div><h1>Welcome back, Arjun 👋</h1><p class="text-muted">Here's an overview of your portfolio.</p></div>
+        <a href="browse.html" class="btn btn-primary"><i data-lucide="search"></i> Browse Startups</a>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="wallet"></i></div><div class="kpi-value">₹<span data-count="24.5" data-decimals="1" data-suffix="L">0</span></div><div class="kpi-label">Total Invested</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="rocket"></i></div><div class="kpi-value"><span data-count="12">0</span></div><div class="kpi-label">Startups Backed</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="heart"></i></div><div class="kpi-value"><span data-count="8">0</span></div><div class="kpi-label">Wishlist Items</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="trending-up"></i></div><div class="kpi-value"><span data-count="18" data-suffix="%">0</span></div><div class="kpi-label">Avg. Campaign Growth</div></div>
+      </div>
+
+      <div class="panel-grid">
+        <div class="card chart-card"><div class="chart-head"><h4 style="margin:0;font-size:15px;">Investment Growth</h4></div><div class="chart-canvas-wrap"><canvas id="invChart"></canvas></div></div>
+        <div class="card chart-card"><div class="chart-head"><h4 style="margin:0;font-size:15px;">By Category</h4></div><div class="chart-canvas-wrap" style="height:230px;"><canvas id="catChart"></canvas></div></div>
+      </div>
+
+      <div class="mt-24">
+        <div class="chart-head"><h4 style="margin:0;">Recommended For You</h4><a href="browse.html" class="text-sm" style="color:var(--primary);font-weight:600;">See more</a></div>
+        <div class="grid-12 mt-16" id="recoGrid"></div>
+      </div>
+
+      <div class="panel-grid mt-24">
+        <div class="card card-pad">
+          <h4 style="font-size:15px;">Recently Viewed</h4>
+          <div id="recentViewed"></div>
+        </div>
+        <div class="card card-pad">
+          <h4 style="font-size:15px;">Activity Timeline</h4>
+          <div id="activityTimeline"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/charts.js"></script>
+<script>
+FS_MOUNT.dashboard('investor','Arjun Malhotra','AM');
+
+function miniCard(s){
+  const pct = fsPct(s.raised, s.goal);
+  return `<div class="card startup-card hover-lift" style="grid-column:span 3;">
+    <div class="startup-cover" style="background:linear-gradient(135deg, ${s.color}, var(--secondary));"><div class="startup-logo">${s.logo}</div></div>
+    <div class="startup-body"><span class="startup-cat">${s.category}</span><h4 class="startup-name">${s.name}</h4>
+    <div class="progress"><div class="progress-bar" style="width:${pct}%;"></div></div>
+    <div class="startup-footer"><span class="text-sm text-muted">${pct}% funded</span><a href="../startup-details.html?id=${s.id}" class="btn btn-outline btn-sm">View</a></div></div></div>`;
+}
+document.getElementById('recoGrid').innerHTML = FS_STARTUPS.slice(0,4).map(miniCard).join('');
+
+document.getElementById('recentViewed').innerHTML = FS_STARTUPS.slice(2,6).map(s=>`
+  <div class="flex items-center gap-12 mb-16"><div class="startup-logo" style="position:static;width:40px;height:40px;border-radius:10px;font-size:13px;background:${s.color}22;color:${s.color};">${s.logo}</div>
+  <div style="flex:1;"><b style="font-size:13.5px;">${s.name}</b><div class="text-sm text-muted">${s.category}</div></div>
+  <a href="../startup-details.html?id=${s.id}" class="btn-icon"><i data-lucide="arrow-up-right" style="width:14px;height:14px;"></i></a></div>`).join('');
+
+document.getElementById('activityTimeline').innerHTML = [
+  ["Invested ₹2,50,000 in AgroSense","2 days ago","indian-rupee"],
+  ["Bookmarked NimbusStack","4 days ago","heart"],
+  ["Commented on PayNest","6 days ago","message-circle"],
+  ["Rated CredSecure 5 stars","1 week ago","star"],
+].map(a=>`<div class="flex gap-12 mb-16"><div class="kpi-icon" style="width:34px;height:34px;flex-shrink:0;"><i data-lucide="${a[2]}" style="width:15px;height:15px;"></i></div><div><b style="font-size:13.5px;display:block;">${a[0]}</b><span class="text-sm text-muted">${a[1]}</span></div></div>`).join('');
+
+window.FS_AFTER_MOUNT = function(){
+  if(window.lucide) lucide.createIcons();
+  fsLineChart(document.getElementById('invChart'), ['Feb','Mar','Apr','May','Jun','Jul'], [{label:'Invested (₹L)', data:[3,6,10,14,19,24.5], color:'#7C3AED'}]);
+  fsDoughnut(document.getElementById('catChart'), ['FinTech','AgriTech','SaaS','Healthcare','Other'], [30,22,20,15,13], ['#2563EB','#22C55E','#7C3AED','#EF4444','#F59E0B']);
+};
+</script>
+</body>
+</html>

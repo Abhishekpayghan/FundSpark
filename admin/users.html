@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Users — FundSpark Admin</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="users">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head"><div><h1>User Management</h1><p class="text-muted">View, verify, and moderate platform users.</p></div></div>
+
+      <div class="card card-pad mb-24" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+        <div class="input-icon" style="flex:1;min-width:220px;"><i data-lucide="search" style="width:17px;height:17px;"></i><input class="form-control" id="uSearch" placeholder="Search by name or email..."></div>
+        <div class="pill-nav" id="uRole">
+          <span class="pill active" data-r="All">All</span><span class="pill" data-r="Founder">Founders</span><span class="pill" data-r="Investor">Investors</span>
+        </div>
+        <select class="form-control" id="uStatus" style="max-width:160px;"><option value="">Any Status</option><option>Active</option><option>Pending</option><option>Suspended</option></select>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+            <tbody id="userRows"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="pagination"><button class="active">1</button><button>2</button><button><i data-lucide="chevron-right" style="width:15px;height:15px;"></i></button></div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+FS_MOUNT.dashboard('admin','Karan Bhatt','KB');
+let st = {search:"",role:"All",status:""};
+function statusBadge(s){ return s==='Active' ? 'badge-success' : s==='Suspended' ? 'badge-danger' : 'badge-warning'; }
+function render(){
+  let list = FS_USERS.filter(u=>{
+    if(st.role!=='All' && u.role!==st.role) return false;
+    if(st.status && u.status!==st.status) return false;
+    if(st.search && !(u.name+u.email).toLowerCase().includes(st.search.toLowerCase())) return false;
+    return true;
+  });
+  document.getElementById('userRows').innerHTML = list.map(u=>`
+    <tr><td><div class="row-flex"><div class="avatar">${u.init}</div><div><b style="font-size:13.5px;display:block;">${u.name}</b><span class="text-sm text-muted">${u.email}</span></div></div></td>
+    <td><span class="badge ${u.role==='Founder'?'badge-primary':'badge-secondary'}">${u.role}</span></td>
+    <td><span class="badge ${statusBadge(u.status)}">${u.status}</span></td>
+    <td>${u.joined}</td>
+    <td><div class="flex gap-8">
+      <button class="btn-icon" title="View" onclick="fsToast('Viewing profile for ${u.name}.','info')"><i data-lucide="eye" style="width:14px;height:14px;"></i></button>
+      <button class="btn-icon" title="Suspend" onclick="fsToast('${u.name} has been suspended.','error')"><i data-lucide="ban" style="width:14px;height:14px;"></i></button>
+    </div></td></tr>`).join('') || `<tr><td colspan="5"><div class="empty-state"><div class="empty-icon"><i data-lucide="users"></i></div><h4>No users found</h4></div></td></tr>`;
+  if(window.lucide) lucide.createIcons();
+}
+document.getElementById('uSearch').addEventListener('input', e=>{st.search=e.target.value; render();});
+document.getElementById('uStatus').addEventListener('change', e=>{st.status=e.target.value; render();});
+document.getElementById('uRole').addEventListener('click', e=>{const p=e.target.closest('.pill'); if(!p) return; document.querySelectorAll('#uRole .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active'); st.role=p.getAttribute('data-r'); render();});
+window.FS_AFTER_MOUNT = render;
+</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campaign Approval — FundSpark Admin</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="campaign-approval">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head"><div><h1>Campaign Approval</h1><p class="text-muted">Review new campaigns before they go live.</p></div></div>
+      <div class="grid-12" id="approvalGrid"></div>
+      <div class="empty-state" id="approvalEmpty" style="display:none;"><div class="empty-icon"><i data-lucide="badge-check"></i></div><h4>All caught up!</h4><p>No campaigns waiting for review.</p></div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+FS_MOUNT.dashboard('admin','Karan Bhatt','KB');
+function render(){
+  const grid = document.getElementById('approvalGrid');
+  if(FS_PENDING_CAMPAIGNS.length===0){ grid.innerHTML=''; document.getElementById('approvalEmpty').style.display='block'; return; }
+  document.getElementById('approvalEmpty').style.display='none';
+  grid.innerHTML = FS_PENDING_CAMPAIGNS.map((c,i)=>`
+    <div class="card card-pad" style="grid-column:span 4;">
+      <div class="flex justify-between items-center mb-16"><span class="badge badge-warning">Pending</span><span class="text-sm text-muted">${c.submitted}</span></div>
+      <h4>${c.name}</h4>
+      <p class="text-sm">Founder: ${c.founder}</p>
+      <div class="flex justify-between text-sm mb-16"><span class="text-muted">Category</span><b>${c.category}</b></div>
+      <div class="flex justify-between text-sm mb-24"><span class="text-muted">Funding Goal</span><b>${fsCurrency(c.goal)}</b></div>
+      <div class="flex gap-8">
+        <button class="btn btn-primary btn-sm btn-block" onclick="approve(${i})"><i data-lucide="check"></i> Approve</button>
+        <button class="btn btn-outline btn-sm btn-block" style="color:var(--danger);border-color:var(--danger);" onclick="reject(${i})"><i data-lucide="x"></i> Reject</button>
+      </div>
+    </div>`).join('');
+  if(window.lucide) lucide.createIcons();
+}
+function approve(i){ fsToast(FS_PENDING_CAMPAIGNS[i].name + ' approved and published.','success'); FS_PENDING_CAMPAIGNS.splice(i,1); render(); }
+function reject(i){ fsToast(FS_PENDING_CAMPAIGNS[i].name + ' rejected.','error'); FS_PENDING_CAMPAIGNS.splice(i,1); render(); }
+window.FS_AFTER_MOUNT = render;
+</script>
+</body>
+</html>

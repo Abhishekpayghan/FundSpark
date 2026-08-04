@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Founder Dashboard — FundSpark</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="dashboard">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head">
+        <div><h1>Welcome back, Riya 👋</h1><p class="text-muted">Here's how your campaigns are performing.</p></div>
+        <a href="create-startup.html" class="btn btn-primary"><i data-lucide="plus"></i> Create Startup</a>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="card kpi-card">
+          <div class="kpi-top"><div class="kpi-icon"><i data-lucide="rocket"></i></div><span class="kpi-delta up"><i data-lucide="arrow-up-right" style="width:13px;height:13px;"></i> 2 new</span></div>
+          <div class="kpi-value"><span data-count="3">0</span></div><div class="kpi-label">Active Campaigns</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-top"><div class="kpi-icon"><i data-lucide="indian-rupee"></i></div><span class="kpi-delta up"><i data-lucide="arrow-up-right" style="width:13px;height:13px;"></i> 18%</span></div>
+          <div class="kpi-value">₹<span data-count="18.7" data-decimals="1" data-suffix="L">0</span></div><div class="kpi-label">Total Funding Raised</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-top"><div class="kpi-icon"><i data-lucide="eye"></i></div><span class="kpi-delta up"><i data-lucide="arrow-up-right" style="width:13px;height:13px;"></i> 9%</span></div>
+          <div class="kpi-value"><span data-count="12400" data-suffix="">0</span></div><div class="kpi-label">Campaign Views</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-top"><div class="kpi-icon"><i data-lucide="users"></i></div><span class="kpi-delta up"><i data-lucide="arrow-up-right" style="width:13px;height:13px;"></i> 5 new</span></div>
+          <div class="kpi-value"><span data-count="64">0</span></div><div class="kpi-label">Interested Investors</div>
+        </div>
+      </div>
+
+      <div class="panel-grid">
+        <div class="card chart-card">
+          <div class="chart-head"><h4 style="margin:0;font-size:15px;">Funding Growth</h4><span class="badge badge-primary">Last 6 months</span></div>
+          <div class="chart-canvas-wrap"><canvas id="fundingChart"></canvas></div>
+        </div>
+        <div class="card chart-card">
+          <div class="chart-head"><h4 style="margin:0;font-size:15px;">Investor Growth</h4></div>
+          <div class="chart-canvas-wrap" style="height:230px;"><canvas id="investorChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="panel-grid mt-24">
+        <div class="card card-pad">
+          <div class="chart-head"><h4 style="margin:0;font-size:15px;">Recent Investments</h4><a href="investors.html" class="text-sm" style="color:var(--primary);font-weight:600;">View all</a></div>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Investor</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead>
+              <tbody id="investRows"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card card-pad">
+          <div class="chart-head"><h4 style="margin:0;font-size:15px;">Recent Activity</h4></div>
+          <div id="activityFeed"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/charts.js"></script>
+<script>
+FS_MOUNT.dashboard('founder','Riya Kulkarni','RK');
+
+document.getElementById('investRows').innerHTML = FS_INVESTORS_LIST.map(i=>`
+  <tr><td><div class="row-flex"><div class="avatar">${i.init}</div>${i.name}</div></td>
+  <td><b>${fsCurrency(i.amount)}</b></td><td>${i.date}</td>
+  <td><span class="badge ${i.status==='Confirmed'?'badge-success':'badge-warning'}">${i.status}</span></td></tr>`).join('');
+
+document.getElementById('activityFeed').innerHTML = FS_NOTIFICATIONS.slice(0,5).map(n=>`
+  <div class="flex gap-12 mb-16">
+    <div class="kpi-icon" style="width:36px;height:36px;flex-shrink:0;background:var(--gradient-soft);"><i data-lucide="${n.icon}" style="width:16px;height:16px;"></i></div>
+    <div><b style="font-size:13.5px;display:block;">${n.title}</b><span class="text-sm text-muted">${n.text}</span><div class="text-sm text-muted">${n.time}</div></div>
+  </div>`).join('');
+
+window.FS_AFTER_MOUNT = function(){
+  if(window.lucide) lucide.createIcons();
+  fsLineChart(document.getElementById('fundingChart'), ['Feb','Mar','Apr','May','Jun','Jul'],
+    [{label:'Funding (₹L)', data:[2,5,7.5,11,15,18.7], color:'#2563EB'}]);
+  fsBarChart(document.getElementById('investorChart'), ['Feb','Mar','Apr','May','Jun','Jul'], [3,8,14,22,38,64], '#7C3AED');
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Startup Details — FundSpark</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<style>
+.details-layout{display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start;}
+.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.gallery-grid div{height:110px;border-radius:14px;background:var(--gradient-soft);}
+.team-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+.timeline-item{display:flex;gap:14px;padding-bottom:24px;position:relative;}
+.timeline-item::before{content:'';position:absolute;left:9px;top:24px;bottom:0;width:2px;background:var(--border);}
+.timeline-item:last-child::before{display:none;}
+.timeline-dot{width:20px;height:20px;border-radius:50%;background:var(--gradient);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.timeline-dot::after{content:'';width:8px;height:8px;background:#fff;border-radius:50%;}
+@media(max-width:960px){.details-layout{grid-template-columns:1fr;} .invest-widget{position:static !important;}}
+</style>
+</head>
+<body data-active="explore">
+<div id="fs-navbar"></div>
+
+<div style="height:220px;background:var(--gradient);position:relative;">
+  <div style="position:absolute;inset:0;background:radial-gradient(500px 260px at 80% 20%, rgba(255,255,255,.18), transparent);"></div>
+</div>
+
+<section class="section-sm" style="padding-top:0;">
+  <div class="container">
+    <div class="breadcrumb mt-16"><a href="index.html">Home</a> <i data-lucide="chevron-right" style="width:13px;height:13px;"></i> <a href="explore.html">Explore</a> <i data-lucide="chevron-right" style="width:13px;height:13px;"></i> <span id="crumbName">Startup</span></div>
+
+    <div class="card card-pad" style="margin-top:-70px;position:relative;z-index:2;">
+      <div class="flex items-start justify-between gap-16" style="flex-wrap:wrap;">
+        <div class="flex gap-16 items-center">
+          <div class="startup-logo" id="detailLogo" style="position:static;width:76px;height:76px;font-size:24px;border-radius:18px;"></div>
+          <div>
+            <div class="flex items-center gap-8"><h2 id="detailName" style="margin-bottom:2px;">—</h2><span class="badge badge-verified" id="verifiedBadge"><i data-lucide="badge-check" style="width:12px;height:12px;"></i> Verified</span></div>
+            <p class="text-sm" style="margin:0;" id="detailFounder">Founder</p>
+            <div class="flex items-center gap-16 mt-8">
+              <span class="badge badge-primary" id="detailCat">Category</span>
+              <span class="rating" id="detailRating"></span>
+              <span class="text-sm text-muted"><i data-lucide="map-pin" style="width:13px;height:13px;vertical-align:-2px;"></i> <span id="detailLoc"></span></span>
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-8">
+          <button class="btn-icon" onclick="fsToggleBookmark(this,'this startup')"><i data-lucide="heart"></i></button>
+          <button class="btn-icon" onclick="fsToast('Share link copied to clipboard.','info')"><i data-lucide="share-2"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="details-layout mt-24">
+      <div>
+        <div class="tabs" data-target="#tabContent">
+          <button class="tab-btn active" data-tab="tab-overview">Overview</button>
+          <button class="tab-btn" data-tab="tab-problem">Problem</button>
+          <button class="tab-btn" data-tab="tab-solution">Solution</button>
+          <button class="tab-btn" data-tab="tab-model">Business Model</button>
+          <button class="tab-btn" data-tab="tab-market">Market</button>
+          <button class="tab-btn" data-tab="tab-usage">Funding Usage</button>
+          <button class="tab-btn" data-tab="tab-team">Team</button>
+          <button class="tab-btn" data-tab="tab-timeline">Timeline</button>
+          <button class="tab-btn" data-tab="tab-media">Media</button>
+          <button class="tab-btn" data-tab="tab-comments">Comments</button>
+        </div>
+        <div id="tabContent">
+          <div class="tab-panel active" id="tab-overview">
+            <p id="overviewText">Loading...</p>
+            <div class="grid-12 mt-16">
+              <div class="card card-pad" style="grid-column:span 4;text-align:center;"><i data-lucide="target" style="color:var(--primary);"></i><div class="mt-8" style="font-family:var(--font-head);font-weight:700;" id="ovGoal">—</div><span class="text-sm text-muted">Funding Goal</span></div>
+              <div class="card card-pad" style="grid-column:span 4;text-align:center;"><i data-lucide="calendar" style="color:var(--primary);"></i><div class="mt-8" style="font-family:var(--font-head);font-weight:700;" id="ovDeadline">—</div><span class="text-sm text-muted">Campaign Deadline</span></div>
+              <div class="card card-pad" style="grid-column:span 4;text-align:center;"><i data-lucide="award" style="color:var(--primary);"></i><div class="mt-8" style="font-family:var(--font-head);font-weight:700;" id="ovScore">—</div><span class="text-sm text-muted">Startup Score</span></div>
+            </div>
+          </div>
+          <div class="tab-panel" id="tab-problem"><h4>The Problem</h4><p>Traditional approaches in this sector are slow, expensive, or inaccessible to the communities that need them most — leaving a measurable gap in the market that larger players have been slow to close.</p></div>
+          <div class="tab-panel" id="tab-solution"><h4>Our Solution</h4><p>A focused, technology-first product that removes the biggest cost and accessibility barriers, validated through pilot programs with real early customers.</p></div>
+          <div class="tab-panel" id="tab-model"><h4>Business Model</h4><p>Revenue combines a subscription tier for core users with a smaller transaction-based fee on premium features, keeping the entry price low for first-time customers.</p>
+          <div class="table-wrap mt-16"><table class="data-table"><thead><tr><th>Revenue Stream</th><th>Share</th><th>Status</th></tr></thead><tbody>
+          <tr><td>Subscriptions</td><td>62%</td><td><span class="badge badge-success">Live</span></td></tr>
+          <tr><td>Transaction fees</td><td>28%</td><td><span class="badge badge-success">Live</span></td></tr>
+          <tr><td>Enterprise licensing</td><td>10%</td><td><span class="badge badge-warning">Piloting</span></td></tr>
+          </tbody></table></div></div>
+          <div class="tab-panel" id="tab-market"><h4>Market Opportunity</h4><p>The addressable market spans a large base of underserved customers across India's tier-2 and tier-3 regions, with adjacent expansion possible into neighbouring geographies once the core model is proven.</p></div>
+          <div class="tab-panel" id="tab-usage">
+            <h4>Funding Usage Breakdown</h4>
+            <div class="chart-canvas-wrap" style="height:260px;"><canvas id="usageChart"></canvas></div>
+          </div>
+          <div class="tab-panel" id="tab-team">
+            <h4>Team Members</h4>
+            <div class="team-grid mt-16" id="teamGrid"></div>
+          </div>
+          <div class="tab-panel" id="tab-timeline">
+            <h4>Campaign Timeline</h4>
+            <div class="mt-16">
+              <div class="timeline-item"><div class="timeline-dot"></div><div><b>Campaign launched</b><div class="text-sm text-muted">1 Jun 2026 — Initial pitch published and approved by admin.</div></div></div>
+              <div class="timeline-item"><div class="timeline-dot"></div><div><b>50% funding milestone</b><div class="text-sm text-muted">22 Jun 2026 — Crossed halfway with 40+ investors.</div></div></div>
+              <div class="timeline-item"><div class="timeline-dot"></div><div><b>Featured on homepage</b><div class="text-sm text-muted">6 Jul 2026 — Selected as a trending campaign.</div></div></div>
+              <div class="timeline-item"><div class="timeline-dot"></div><div><b>Campaign deadline</b><div class="text-sm text-muted">Upcoming — Final day to invest.</div></div></div>
+            </div>
+          </div>
+          <div class="tab-panel" id="tab-media">
+            <h4>Pitch Video</h4>
+            <div class="card" style="height:280px;background:var(--gradient-soft);display:flex;align-items:center;justify-content:center;margin-bottom:24px;">
+              <button class="btn-icon" style="width:64px;height:64px;border-radius:50%;background:var(--gradient);color:#fff;"><i data-lucide="play" style="width:26px;height:26px;"></i></button>
+            </div>
+            <h4>Image Gallery</h4>
+            <div class="gallery-grid mb-24"><div></div><div></div><div></div><div></div><div></div><div></div></div>
+            <h4>Business Plan</h4>
+            <div class="card card-pad flex items-center gap-16" style="max-width:360px;">
+              <i data-lucide="file-text" style="width:32px;height:32px;color:var(--danger);"></i>
+              <div><b style="font-size:14px;">business-plan.pdf</b><div class="text-sm text-muted">2.4 MB</div></div>
+              <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="fsToast('Download simulated for this prototype.','info')">Download</button>
+            </div>
+          </div>
+          <div class="tab-panel" id="tab-comments">
+            <div class="flex justify-between items-center mb-16"><h4 style="margin:0;">Comments &amp; Ratings</h4><span class="text-sm text-muted" id="commentCount">3 comments</span></div>
+            <form class="card card-pad mb-24" onsubmit="event.preventDefault(); addComment(this);">
+              <textarea class="form-control" placeholder="Share your thoughts or ask the founder a question..." required></textarea>
+              <div class="flex justify-between items-center mt-16">
+                <div class="rating" id="starPicker" data-val="5">
+                  ${'<i data-lucide="star" style="width:18px;height:18px;fill:currentColor;cursor:pointer;"></i>'.repeat(5)}
+                </div>
+                <button class="btn btn-primary btn-sm" type="submit">Post Comment</button>
+              </div>
+            </form>
+            <div id="commentsList"></div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="card card-pad invest-widget" style="position:sticky;top:96px;">
+        <div class="funding-row" style="font-size:15px;"><span><b id="widgetRaised">—</b></span><span class="text-muted">of <span id="widgetGoal">—</span></span></div>
+        <div class="progress mt-8"><div class="progress-bar" id="widgetBar" data-target="0"></div></div>
+        <div class="grid-12 mt-16" style="gap:12px;">
+          <div style="grid-column:span 4;text-align:center;"><b style="display:block;font-family:var(--font-head);font-size:17px;" id="widgetPct">0%</b><span class="text-sm text-muted">Funded</span></div>
+          <div style="grid-column:span 4;text-align:center;border-left:1px solid var(--border);border-right:1px solid var(--border);"><b style="display:block;font-family:var(--font-head);font-size:17px;" id="widgetInvestors">0</b><span class="text-sm text-muted">Investors</span></div>
+          <div style="grid-column:span 4;text-align:center;"><b style="display:block;font-family:var(--font-head);font-size:17px;" id="widgetDays">0</b><span class="text-sm text-muted">Days Left</span></div>
+        </div>
+        <button class="btn btn-primary btn-block mt-24" onclick="fsOpenModal('investModal')"><i data-lucide="indian-rupee"></i> Invest Now</button>
+        <button class="btn btn-outline btn-block mt-8" onclick="fsToast('Interest sent to the founder.','success')"><i data-lucide="handshake"></i> I'm Interested</button>
+        <div class="flex gap-8 mt-8">
+          <button class="btn btn-ghost btn-block" onclick="fsToggleBookmark(this,'this startup')"><i data-lucide="heart"></i> Bookmark</button>
+          <button class="btn btn-ghost btn-block" onclick="fsToast('Share link copied.','info')"><i data-lucide="share-2"></i> Share</button>
+        </div>
+        <hr style="border:none;border-top:1px solid var(--border);margin:20px 0;">
+        <div class="flex items-center gap-12"><i data-lucide="shield-check" style="color:var(--success);"></i><span class="text-sm">Business plan &amp; team verified by admin</span></div>
+      </aside>
+    </div>
+
+    <div class="mt-32">
+      <h3>Related Startups</h3>
+      <div class="grid-12" id="relatedGrid"></div>
+    </div>
+  </div>
+</section>
+
+<div class="modal-overlay" id="investModal">
+  <div class="modal">
+    <button class="modal-close" onclick="fsCloseModal('investModal')"><i data-lucide="x"></i></button>
+    <h3>Invest in <span id="modalName">this startup</span></h3>
+    <form onsubmit="event.preventDefault(); fsCloseModal('investModal'); fsToast('Investment simulated successfully. Thank you!','success');">
+      <div class="form-group"><label>Investment Amount (₹)</label><input class="form-control" type="number" min="1000" step="1000" value="50000" required></div>
+      <div class="form-group"><label>Payment Method (simulated)</label>
+        <select class="form-control"><option>UPI</option><option>Net Banking</option><option>Debit Card</option></select>
+      </div>
+      <label class="checkbox-row mb-16"><input type="checkbox" required> I agree to the investment terms &amp; risk disclosure.</label>
+      <button class="btn btn-primary btn-block" type="submit">Confirm Investment</button>
+    </form>
+  </div>
+</div>
+
+<div id="fs-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/charts.js"></script>
+<script>
+const id = parseInt(new URLSearchParams(location.search).get('id')) || 1;
+const s = FS_STARTUPS.find(x=>x.id===id) || FS_STARTUPS[0];
+const pct = fsPct(s.raised, s.goal);
+
+document.getElementById('crumbName').textContent = s.name;
+document.getElementById('detailLogo').textContent = s.logo;
+document.getElementById('detailLogo').style.background = s.color+'22';
+document.getElementById('detailLogo').style.color = s.color;
+document.getElementById('detailName').textContent = s.name;
+document.getElementById('detailFounder').textContent = 'Founded by ' + (s.founder||'—');
+document.getElementById('detailCat').textContent = s.category;
+document.getElementById('detailLoc').textContent = s.location;
+document.getElementById('verifiedBadge').style.display = s.verified ? 'inline-flex':'none';
+document.getElementById('detailRating').innerHTML = '<i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i> ' + s.rating + ' <span class="text-muted">('+s.reviews+' reviews)</span>';
+document.getElementById('overviewText').textContent = s.tagline + ' ' + s.name + ' is building toward a full-scale rollout after strong early traction, and is raising this round to accelerate hiring, product development, and go-to-market across new regions.';
+document.getElementById('ovGoal').textContent = fsCurrency(s.goal);
+document.getElementById('ovDeadline').textContent = s.days + ' days left';
+document.getElementById('ovScore').textContent = s.score + '/100';
+document.getElementById('modalName').textContent = s.name;
+
+document.getElementById('widgetRaised').textContent = fsCurrency(s.raised);
+document.getElementById('widgetGoal').textContent = fsCurrency(s.goal);
+document.getElementById('widgetBar').setAttribute('data-target', pct);
+document.getElementById('widgetPct').textContent = pct+'%';
+document.getElementById('widgetInvestors').textContent = s.reviews;
+document.getElementById('widgetDays').textContent = s.days;
+
+document.getElementById('teamGrid').innerHTML = FS_TEAM.map(m=>`
+  <div class="card card-pad flex items-center gap-12"><div class="avatar">${m.init}</div><div><b style="font-size:14px;">${m.name}</b><div class="text-sm text-muted">${m.role}</div></div></div>`).join('');
+
+function renderComments(){
+  document.getElementById('commentsList').innerHTML = FS_COMMENTS.map(c=>`
+    <div class="flex gap-12 mb-24">
+      <div class="avatar">${c.init}</div>
+      <div style="flex:1;">
+        <div class="flex justify-between items-center"><b style="font-size:14px;">${c.name}</b><span class="text-sm text-muted">${c.time}</span></div>
+        <p class="text-sm mt-8" style="margin-bottom:6px;">${c.text}</p>
+        <div class="flex gap-16 text-sm text-muted"><span class="flex items-center gap-8" style="cursor:pointer;"><i data-lucide="thumbs-up" style="width:14px;height:14px;"></i> ${c.likes}</span><span style="cursor:pointer;">Reply</span></div>
+      </div>
+    </div>`).join('');
+  document.getElementById('commentCount').textContent = FS_COMMENTS.length + ' comments';
+  if(window.lucide) lucide.createIcons();
+}
+function addComment(form){
+  const text = form.querySelector('textarea').value;
+  FS_COMMENTS.unshift({name:"You", init:"YOU", time:"just now", text, likes:0});
+  form.reset();
+  renderComments();
+  fsToast('Your comment has been posted.','success');
+}
+
+document.getElementById('relatedGrid').innerHTML = FS_STARTUPS.filter(x=>x.category===s.category && x.id!==s.id).slice(0,3).concat(FS_STARTUPS.filter(x=>x.id!==s.id)).slice(0,3).map(r=>{
+  const p = fsPct(r.raised,r.goal);
+  return `<div class="card startup-card hover-lift" style="grid-column:span 4;">
+    <div class="startup-cover" style="background:linear-gradient(135deg, ${r.color}, var(--secondary));"><div class="startup-logo">${r.logo}</div></div>
+    <div class="startup-body">
+      <span class="startup-cat">${r.category}</span>
+      <h4 class="startup-name">${r.name}</h4>
+      <div class="progress"><div class="progress-bar" style="width:${p}%;"></div></div>
+      <div class="startup-footer"><span class="text-sm text-muted">${p}% funded</span><a href="startup-details.html?id=${r.id}" class="btn btn-outline btn-sm">View</a></div>
+    </div></div>`;
+}).join('');
+
+window.FS_AFTER_MOUNT = function(){
+  renderComments();
+  fsAnimateProgressBars();
+  new fsDoughnut(document.getElementById('usageChart'), ['Product Development','Marketing','Hiring','Operations'], [40,25,25,10], ['#2563EB','#7C3AED','#22C55E','#F59E0B']);
+  if(window.lucide) lucide.createIcons();
+};
+</script>
+</body>
+</html>

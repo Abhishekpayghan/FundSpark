@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact — FundSpark</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="contact">
+<div id="fs-navbar"></div>
+
+<header class="hero" style="padding:56px 0 40px;">
+  <div class="container text-center">
+    <span class="eyebrow">We'd love to hear from you</span>
+    <h1 style="font-size:clamp(28px,4vw,42px);">Get in Touch</h1>
+    <p class="lead" style="margin:0 auto;">Questions about funding, verification, or partnerships — reach out any time.</p>
+  </div>
+</header>
+
+<section class="section">
+  <div class="container grid-12" style="gap:24px;">
+    <div class="card card-pad" style="grid-column:span 4;">
+      <div class="mb-24"><div class="category-icon" style="margin:0 0 12px;"><i data-lucide="mail"></i></div><h4 style="font-size:15px;">Email us</h4><p class="text-sm">support@fundspark.io</p></div>
+      <div class="mb-24"><div class="category-icon" style="margin:0 0 12px;"><i data-lucide="phone"></i></div><h4 style="font-size:15px;">Call us</h4><p class="text-sm">+91 98765 43210</p></div>
+      <div><div class="category-icon" style="margin:0 0 12px;"><i data-lucide="map-pin"></i></div><h4 style="font-size:15px;">Visit us</h4><p class="text-sm">FundSpark HQ, Baner Road, Pune, Maharashtra 411045</p></div>
+    </div>
+    <div class="card card-pad" style="grid-column:span 8;">
+      <form onsubmit="event.preventDefault(); fsToast('Your message has been sent. We\\'ll respond within 24 hours.','success'); this.reset();">
+        <div class="form-row">
+          <div class="form-group"><label>Full Name</label><input class="form-control" required placeholder="Your name"></div>
+          <div class="form-group"><label>Email Address</label><input type="email" class="form-control" required placeholder="you@example.com"></div>
+        </div>
+        <div class="form-group"><label>Subject</label>
+          <select class="form-control"><option>General Inquiry</option><option>Startup Verification</option><option>Investor Support</option><option>Partnership</option><option>Report an Issue</option></select>
+        </div>
+        <div class="form-group"><label>Message</label><textarea class="form-control" rows="5" required placeholder="How can we help?"></textarea></div>
+        <button class="btn btn-primary" type="submit"><i data-lucide="send"></i> Send Message</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<div id="fs-footer"></div>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/main.js"></script>
+</body>
+</html>

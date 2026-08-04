@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campaign Analytics — FundSpark</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="analytics">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head"><div><h1>Campaign Analytics</h1><p class="text-muted">Performance breakdown for AgroSense.</p></div>
+        <select class="form-control" style="max-width:170px;"><option>Last 30 days</option><option>Last 90 days</option><option>All time</option></select>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="eye"></i></div><div class="kpi-value"><span data-count="12400">0</span></div><div class="kpi-label">Total Views</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="mouse-pointer-click"></i></div><div class="kpi-value"><span data-count="8.4" data-decimals="1" data-suffix="%">0</span></div><div class="kpi-label">Conversion Rate</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="indian-rupee"></i></div><div class="kpi-value">₹<span data-count="2.9" data-decimals="1" data-suffix="k">0</span></div><div class="kpi-label">Avg. Investment</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="repeat"></i></div><div class="kpi-value"><span data-count="34" data-suffix="%">0</span></div><div class="kpi-label">Returning Visitors</div></div>
+      </div>
+
+      <div class="panel-grid">
+        <div class="card chart-card"><div class="chart-head"><h4 style="margin:0;font-size:15px;">Funding Progress Over Time</h4></div><div class="chart-canvas-wrap"><canvas id="progChart"></canvas></div></div>
+        <div class="card chart-card"><div class="chart-head"><h4 style="margin:0;font-size:15px;">Traffic Sources</h4></div><div class="chart-canvas-wrap" style="height:230px;"><canvas id="trafficChart"></canvas></div></div>
+      </div>
+
+      <div class="panel-grid mt-24">
+        <div class="card chart-card"><div class="chart-head"><h4 style="margin:0;font-size:15px;">Views vs. Investments</h4></div><div class="chart-canvas-wrap"><canvas id="viewsChart"></canvas></div></div>
+        <div class="card card-pad">
+          <h4 style="font-size:15px;">Investor Demographics</h4>
+          <div class="chart-canvas-wrap" style="height:230px;"><canvas id="demoChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/charts.js"></script>
+<script>
+FS_MOUNT.dashboard('founder','Riya Kulkarni','RK');
+window.FS_AFTER_MOUNT = function(){
+  if(window.lucide) lucide.createIcons();
+  fsLineChart(document.getElementById('progChart'), ['W1','W2','W3','W4','W5','W6','W7'], [{label:'₹ Raised (L)', data:[1,3,5.5,8,11.5,15,18.7], color:'#2563EB'}]);
+  fsDoughnut(document.getElementById('trafficChart'), ['Direct','Social','Search','Referral'], [38,29,21,12], ['#2563EB','#7C3AED','#22C55E','#F59E0B']);
+  fsBarChart(document.getElementById('viewsChart'), ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], [420,510,380,610,740,890,650], '#2563EB');
+  fsDoughnut(document.getElementById('demoChart'), ['25-34','35-44','45-54','55+'], [44,31,17,8], ['#7C3AED','#2563EB','#22C55E','#F59E0B']);
+};
+</script>
+</body>
+</html>

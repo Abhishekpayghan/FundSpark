@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register — FundSpark</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body>
+<div id="fs-navbar"></div>
+
+<div class="auth-wrap">
+  <div class="auth-visual">
+    <div style="position:relative;z-index:1;color:#fff;max-width:380px;">
+      <div class="mark" style="width:52px;height:52px;background:rgba(255,255,255,.18);margin-bottom:24px;"><i data-lucide="rocket"></i></div>
+      <h2 style="color:#fff;font-size:30px;">Join FundSpark today</h2>
+      <p style="color:rgba(255,255,255,.85);">Whether you're pitching your next big idea or looking for your next investment, your journey starts here.</p>
+      <ul style="margin-top:24px;">
+        <li class="flex items-center gap-12 mt-16" style="color:#fff;"><i data-lucide="check-circle"></i> Free to create a profile</li>
+        <li class="flex items-center gap-12 mt-16" style="color:#fff;"><i data-lucide="check-circle"></i> Verified, transparent campaigns</li>
+        <li class="flex items-center gap-12 mt-16" style="color:#fff;"><i data-lucide="check-circle"></i> Real-time funding analytics</li>
+      </ul>
+    </div>
+  </div>
+  <div class="auth-form-wrap">
+    <div class="auth-card">
+      <h2>Create your account</h2>
+      <p class="text-sm mb-24">Already have an account? <a href="login.html" style="color:var(--primary);font-weight:600;">Log in</a></p>
+
+      <div class="form-group">
+        <label>I want to join as</label>
+        <div class="pill-nav" id="regRoleTabs">
+          <span class="pill active" data-role="founder"><i data-lucide="rocket" style="width:13px;height:13px;vertical-align:-2px;"></i> Founder</span>
+          <span class="pill" data-role="investor"><i data-lucide="wallet" style="width:13px;height:13px;vertical-align:-2px;"></i> Investor</span>
+        </div>
+      </div>
+
+      <form onsubmit="handleRegister(event)">
+        <div class="form-row">
+          <div class="form-group"><label>Full Name</label><input class="form-control" required placeholder="Your full name"></div>
+          <div class="form-group"><label>Phone Number</label><input class="form-control" required placeholder="+91 90000 00000"></div>
+        </div>
+        <div class="form-group"><label>Email Address</label><input class="form-control" type="email" required placeholder="you@example.com"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Password</label><input class="form-control" type="password" required placeholder="Create a password"></div>
+          <div class="form-group"><label>Confirm Password</label><input class="form-control" type="password" required placeholder="Re-enter password"></div>
+        </div>
+        <label class="checkbox-row mb-24"><input type="checkbox" required> I agree to the Terms of Service and Privacy Policy.</label>
+        <button class="btn btn-primary btn-block" type="submit">Create Account</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/main.js"></script>
+<script>
+let regRole = 'founder';
+document.getElementById('regRoleTabs').addEventListener('click', e=>{
+  const p = e.target.closest('.pill'); if(!p) return;
+  document.querySelectorAll('#regRoleTabs .pill').forEach(x=>x.classList.remove('active'));
+  p.classList.add('active'); regRole = p.getAttribute('data-role');
+});
+function handleRegister(e){
+  e.preventDefault();
+  fsToast('Account created! Redirecting to your dashboard...','success');
+  setTimeout(()=>{ location.href = regRole + '/dashboard.html'; }, 900);
+}
+</script>
+</body>
+</html>

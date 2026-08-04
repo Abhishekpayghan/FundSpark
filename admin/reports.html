@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reports — FundSpark Admin</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="reports">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head"><div><h1>Reports</h1><p class="text-muted">Flagged content and user reports awaiting moderation.</p></div></div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Reported Item</th><th>Type</th><th>Reason</th><th>Reported By</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody id="reportRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+FS_MOUNT.dashboard('admin','Karan Bhatt','KB');
+const reports = [
+  {item:"KhetChain", type:"Campaign", reason:"Misleading funding usage claims", by:"Wasim Sheikh", date:"29 Jul 2026"},
+  {item:"Comment on PlayForge", type:"Comment", reason:"Spam / promotional link", by:"Divya Krishnan", date:"27 Jul 2026"},
+  {item:"RoboHarvest", type:"Campaign", reason:"Duplicate business plan", by:"Admin System", date:"24 Jul 2026"},
+  {item:"User: fake_investor22", type:"User", reason:"Suspicious account activity", by:"System Flag", date:"20 Jul 2026"},
+];
+document.getElementById('reportRows').innerHTML = reports.map(r=>`
+  <tr><td><b>${r.item}</b></td><td><span class="badge badge-secondary">${r.type}</span></td><td>${r.reason}</td><td>${r.by}</td><td>${r.date}</td>
+  <td><div class="flex gap-8">
+    <button class="btn-icon" title="Dismiss" onclick="fsToast('Report dismissed.','info')"><i data-lucide="x" style="width:14px;height:14px;"></i></button>
+    <button class="btn-icon" title="Take action" onclick="fsToast('Action taken on this report.','success')"><i data-lucide="shield-alert" style="width:14px;height:14px;"></i></button>
+  </div></td></tr>`).join('');
+window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); };
+</script>
+</body>
+</html>

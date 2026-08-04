@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Messages — FundSpark</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<style>
+.msg-shell{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - var(--nav-h) - 56px);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--card);}
+.msg-list{border-right:1px solid var(--border);overflow-y:auto;}
+.msg-item{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;}
+.msg-item:hover,.msg-item.active{background:var(--gradient-soft);}
+.msg-thread{display:flex;flex-direction:column;height:100%;}
+.thread-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.thread-body{flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;}
+.bubble{max-width:70%;padding:12px 16px;border-radius:16px;font-size:14px;}
+.bubble.them{background:var(--bg);align-self:flex-start;border-bottom-left-radius:4px;}
+.bubble.me{background:var(--gradient);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;}
+.thread-input{padding:16px;border-top:1px solid var(--border);display:flex;gap:10px;}
+@media(max-width:900px){.msg-shell{grid-template-columns:1fr;}}
+</style>
+</head>
+<body data-active="messages">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head"><div><h1>Messages</h1><p class="text-muted">Direct conversations with founders.</p></div></div>
+      <div class="msg-shell">
+        <div class="msg-list" id="msgList"></div>
+        <div class="msg-thread">
+          <div class="thread-head"><div class="avatar" id="threadAvatar">RK</div><div><b id="threadName" style="font-size:14px;">Riya Kulkarni</b><div class="text-sm text-muted">Founder, AgroSense</div></div></div>
+          <div class="thread-body" id="threadBody"></div>
+          <div class="thread-input"><input class="form-control" id="msgInput" placeholder="Type a message..."><button class="btn btn-primary" onclick="sendMsg()"><i data-lucide="send"></i></button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+FS_MOUNT.dashboard('investor','Arjun Malhotra','AM');
+const threads = [
+  {init:"RK", name:"Riya Kulkarni", sub:"Founder, AgroSense", last:"Thanks for investing! Here's the Q3 update...", time:"10m", unread:true},
+  {init:"AD", name:"Aman Deshpande", sub:"Founder, MediTrack AI", last:"Sure, I can share the pilot results.", time:"1h", unread:false},
+  {init:"SK", name:"Simran Kaur", sub:"Founder, PayNest", last:"We closed the round — thank you!", time:"1d", unread:false},
+];
+document.getElementById('msgList').innerHTML = threads.map((t,i)=>`
+  <div class="msg-item ${i===0?'active':''}" onclick="openThread(${i})">
+    <div class="avatar">${t.init}</div>
+    <div style="flex:1;min-width:0;"><div class="flex justify-between"><b style="font-size:13.5px;">${t.name}</b><span class="text-sm text-muted">${t.time}</span></div>
+    <div class="text-sm text-muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.last}</div></div>
+    ${t.unread?'<span style="width:8px;height:8px;border-radius:50%;background:var(--primary);flex-shrink:0;margin-top:6px;"></span>':''}
+  </div>`).join('');
+
+function openThread(i){
+  const t = threads[i];
+  document.getElementById('threadAvatar').textContent = t.init;
+  document.getElementById('threadName').textContent = t.name;
+  document.getElementById('threadBody').innerHTML = `
+    <div class="bubble them">Hi Arjun, thanks so much for your interest in our startup!</div>
+    <div class="bubble me">Happy to help — excited about the traction you're showing.</div>
+    <div class="bubble them">${t.last}</div>`;
+  document.querySelectorAll('.msg-item').forEach((el,idx)=>el.classList.toggle('active', idx===i));
+}
+function sendMsg(){
+  const input = document.getElementById('msgInput');
+  if(!input.value.trim()) return;
+  document.getElementById('threadBody').insertAdjacentHTML('beforeend', `<div class="bubble me">${input.value}</div>`);
+  input.value='';
+  document.getElementById('threadBody').scrollTop = 999999;
+}
+window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); };
+</script>
+</body>
+</html>

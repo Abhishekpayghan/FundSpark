@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Investors — FundSpark</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="investors">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head"><div><h1>Investors</h1><p class="text-muted">Everyone who has invested in or shown interest in your startups.</p></div></div>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Investor</th><th>Startup</th><th>Amount</th><th>Date</th><th>Status</th><th></th></tr></thead>
+            <tbody id="investorRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+FS_MOUNT.dashboard('founder','Riya Kulkarni','RK');
+const rows = [...FS_INVESTORS_LIST, {name:"Meera Pillai", init:"MP", amount:120000, date:"22 Jun 2026", status:"Confirmed"}, {name:"Farhan Ali", init:"FA", amount:35000, date:"18 Jun 2026", status:"Pending"}];
+document.getElementById('investorRows').innerHTML = rows.map(i=>`
+  <tr><td><div class="row-flex"><div class="avatar">${i.init}</div>${i.name}</div></td>
+  <td>AgroSense</td><td><b>${fsCurrency(i.amount)}</b></td><td>${i.date}</td>
+  <td><span class="badge ${i.status==='Confirmed'?'badge-success':'badge-warning'}">${i.status}</span></td>
+  <td><button class="btn btn-ghost btn-sm" onclick="fsToast('Message sent to ${i.name}.','success')"><i data-lucide="message-circle" style="width:14px;height:14px;"></i></button></td></tr>`).join('');
+window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); };
+</script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Startups — FundSpark</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="my-startups">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head">
+        <div><h1>My Startups</h1><p class="text-muted">Manage all your campaigns in one place.</p></div>
+        <a href="create-startup.html" class="btn btn-primary"><i data-lucide="plus"></i> Create Startup</a>
+      </div>
+      <div class="pill-nav mb-24">
+        <span class="pill active">All (3)</span>
+        <span class="pill">Live (2)</span>
+        <span class="pill">Pending Approval (1)</span>
+        <span class="pill">Draft (0)</span>
+        <span class="pill">Closed (0)</span>
+      </div>
+      <div class="grid-12" id="myStartupsGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+FS_MOUNT.dashboard('founder','Riya Kulkarni','RK');
+const mine = [FS_STARTUPS[0], FS_STARTUPS[4], {...FS_STARTUPS[7], name:"SoilSense Lite", logo:"SL", verified:false, status:"pending"}];
+document.getElementById('myStartupsGrid').innerHTML = mine.map((s,idx)=>{
+  const pct = fsPct(s.raised, s.goal);
+  const status = idx===2 ? {label:"Pending Approval", cls:"badge-warning"} : {label:"Live", cls:"badge-success"};
+  return `<div class="card startup-card hover-lift" style="grid-column:span 4;">
+    <div class="startup-cover" style="background:linear-gradient(135deg, ${s.color}, var(--secondary));">
+      <div class="startup-badges"><span class="badge ${status.cls}">${status.label}</span></div>
+      <div class="startup-logo">${s.logo}</div>
+    </div>
+    <div class="startup-body">
+      <span class="startup-cat">${s.category}</span>
+      <h4 class="startup-name">${s.name}</h4>
+      <div class="progress"><div class="progress-bar" style="width:${pct}%;"></div></div>
+      <div class="funding-row"><span><b>${fsCurrency(s.raised)}</b> raised</span><span class="text-muted">${pct}%</span></div>
+      <div class="startup-footer">
+        <span class="text-sm text-muted">${s.days} days left</span>
+        <div class="flex gap-8">
+          <a href="edit-startup.html?id=${s.id}" class="btn-icon" title="Edit"><i data-lucide="pencil" style="width:15px;height:15px;"></i></a>
+          <a href="analytics.html?id=${s.id}" class="btn-icon" title="Analytics"><i data-lucide="bar-chart-3" style="width:15px;height:15px;"></i></a>
+        </div>
+      </div>
+    </div></div>`;
+}).join('');
+window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); };
+</script>
+</body>
+</html>

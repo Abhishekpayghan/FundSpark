@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAQ — FundSpark</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="faq">
+<div id="fs-navbar"></div>
+
+<header class="hero" style="padding:56px 0 40px;">
+  <div class="container text-center">
+    <span class="eyebrow">Support center</span>
+    <h1 style="font-size:clamp(28px,4vw,42px);">Frequently Asked Questions</h1>
+    <p class="lead" style="margin:0 auto;">Everything you need to know about funding, investing, and campaigns.</p>
+  </div>
+</header>
+
+<section class="section" style="padding-top:0;">
+  <div class="container" style="max-width:860px;">
+    <div class="pill-nav mb-24" id="faqTabs">
+      <span class="pill active" data-cat="general">General</span>
+      <span class="pill" data-cat="founders">For Founders</span>
+      <span class="pill" data-cat="investors">For Investors</span>
+      <span class="pill" data-cat="payments">Payments</span>
+    </div>
+    <div id="faqFull"></div>
+  </div>
+</section>
+
+<div id="fs-footer"></div>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/components.js"></script>
+<script src="assets/js/main.js"></script>
+<script>
+const faqData = {
+  general:[
+    ["What is FundSpark?","FundSpark is a crowdfunding platform prototype connecting startup founders with investors. This build is a frontend-only academic demo."],
+    ["Is this a real, live investment platform?","No — this is a DBMS mini-project. All financial transactions and users shown are simulated dummy data."],
+    ["How do I create an account?","Use the Register page and choose whether you're joining as a Founder or Investor."],
+  ],
+  founders:[
+    ["How do I publish a campaign?","From the Founder Dashboard, select Create Startup and fill in your pitch, funding goal, deadline, images, and documents."],
+    ["How long does verification take?","Admins typically review submitted campaigns within 2-3 business days in a live deployment."],
+    ["Can I edit a campaign after publishing?","Yes, use Edit Startup from My Startups to update details, media, or the funding goal."],
+  ],
+  investors:[
+    ["How do I find startups to back?","Use Explore or Browse Startups with category, funding goal, and location filters."],
+    ["Can I track my investment history?","Yes, the My Investments page lists every simulated investment you've made."],
+    ["What does the Startup Score mean?","A composite score reflecting traction, team completeness, and verification status."],
+  ],
+  payments:[
+    ["Are payments real?","No, all payment and investment flows in this build are simulated for demonstration only."],
+    ["What payment methods are supported?","The UI simulates UPI, Net Banking, and Debit Card options."],
+    ["Is my data secure?","No real data is transmitted — this is a static frontend prototype."],
+  ]
+};
+function renderFaq(cat){
+  document.getElementById('faqFull').innerHTML = faqData[cat].map((f,i)=>`
+    <div class="accordion-item ${i===0?'open':''}">
+      <div class="accordion-head">${f[0]} <i data-lucide="chevron-down"></i></div>
+      <div class="accordion-body"><p class="text-sm">${f[1]}</p></div>
+    </div>`).join('');
+  fsInitAccordion();
+  if(window.lucide) lucide.createIcons();
+}
+document.querySelectorAll('#faqTabs .pill').forEach(p=>p.addEventListener('click',()=>{
+  document.querySelectorAll('#faqTabs .pill').forEach(x=>x.classList.remove('active'));
+  p.classList.add('active'); renderFaq(p.getAttribute('data-cat'));
+}));
+window.FS_AFTER_MOUNT = function(){ renderFaq('general'); };
+</script>
+</body>
+</html>
