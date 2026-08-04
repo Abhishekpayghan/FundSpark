@@ -54,7 +54,7 @@ const FS_INVESTORS_LIST = [
   {name:"Sneha Kapoor", init:"SK", amount:180000, date:"15 Jul 2026", status:"Confirmed"},
   {name:"Wasim Sheikh", init:"WS", amount:90000, date:"10 Jul 2026", status:"Pending"},
   {name:"Divya Krishnan", init:"DK", amount:400000, date:"02 Jul 2026", status:"Confirmed"},
-  {name:"Karan Bhatt", init:"KB", amount:60000, date:"28 Jun 2026", status:"Confirmed"}
+  {name:"Pratiksha", init:"PH", amount:60000, date:"28 Jun 2026", status:"Confirmed"}
 ];
 
 const FS_NOTIFICATIONS = [
