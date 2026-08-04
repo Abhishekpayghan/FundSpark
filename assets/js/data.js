@@ -66,7 +66,7 @@ const FS_NOTIFICATIONS = [
 ];
 
 const FS_USERS = [
-  {name:"Riya Kulkarni", init:"RK", email:"riya.kulkarni@fundspark.io", role:"Founder", status:"Active", joined:"12 Jan 2026"},
+  {name:"UNKNOWN", init:"UN", email:"unknown@fundspark.io", role:"Founder", status:"Active", joined:"4 Aug 2026"},
   {name:"Arjun Malhotra", init:"AM", email:"arjun.m@fundspark.io", role:"Investor", status:"Active", joined:"03 Feb 2026"},
   {name:"Aman Deshpande", init:"AD", email:"aman.d@fundspark.io", role:"Founder", status:"Active", joined:"22 Feb 2026"},
   {name:"Sneha Kapoor", init:"SK", email:"sneha.k@fundspark.io", role:"Investor", status:"Suspended", joined:"11 Mar 2026"},
