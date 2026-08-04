@@ -37,10 +37,10 @@ const FS_STARTUPS = [
 ];
 
 const FS_TEAM = [
-  {name:"Riya Kulkarni", role:"Founder & CEO", init:"RK"},
-  {name:"Devansh Rao", role:"CTO", init:"DR"},
-  {name:"Sana Qureshi", role:"Head of Ops", init:"SQ"},
-  {name:"Farhan Ali", role:"Lead Engineer", init:"FA"}
+  {name:"UNKNOWN", role:"Founder & CEO", init:"UN"},
+  {name:"Shravani", role:"CTO", init:"SH"},
+  {name:"Khushi", role:"Head of Ops", init:"KH"},
+  {name:"Aarav", role:"Lead Engineer", init:"AB"}
 ];
 
 const FS_COMMENTS = [
