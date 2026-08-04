@@ -22,7 +22,7 @@ const FS_CATEGORIES = [
 ];
 
 const FS_STARTUPS = [
-  {id:1, name:"AgroSense", founder:"Riya Kulkarni", category:"Agriculture", score:92, goal:2500000, raised:1875000, days:18, rating:4.8, reviews:64, verified:true, trending:true, location:"Pune, MH", color:"#22C55E", tagline:"IoT soil sensors that help small farmers cut water use by 40%.", logo:"AS"},
+  {id:1, name:"AgroSense", founder:"Unknown", category:"Agriculture", score:92, goal:2500000, raised:1875000, days:18, rating:4.8, reviews:64, verified:true, trending:true, location:"Pune, MH", color:"#22C55E", tagline:"IoT soil sensors that help small farmers cut water use by 40%.", logo:"AS"},
   {id:2, name:"MediTrack AI", founder:"Aman Deshpande", category:"Healthcare", score:88, goal:5000000, raised:3120000, days:27, rating:4.6, reviews:41, verified:true, trending:true, location:"Bengaluru, KA", color:"#EF4444", tagline:"AI-assisted diagnostics for rural clinics without a radiologist on staff.", logo:"MT"},
   {id:3, name:"PayNest", founder:"Simran Kaur", category:"FinTech", score:95, goal:8000000, raised:7120000, days:6, rating:4.9, reviews:112, verified:true, trending:true, location:"Mumbai, MH", color:"#2563EB", tagline:"Micro-lending rails for gig workers, underwritten with UPI history.", logo:"PN"},
   {id:4, name:"ClassBridge", founder:"Neha Sharma", category:"Education", score:81, goal:1800000, raised:940000, days:34, rating:4.4, reviews:29, verified:false, trending:false, location:"Nagpur, MH", color:"#7C3AED", tagline:"Offline-first learning app for tier-3 schools with patchy internet.", logo:"CB"},
@@ -37,7 +37,7 @@ const FS_STARTUPS = [
 ];
 
 const FS_TEAM = [
-  {name:"UNKNOWN", role:"Founder & CEO", init:"UN"},
+  {name:"Unknown", role:"Founder & CEO", init:"UK"},
   {name:"Shravani", role:"CTO", init:"SH"},
   {name:"Khushi", role:"Head of Ops", init:"KH"},
   {name:"Aarav", role:"Lead Engineer", init:"AB"}
@@ -66,7 +66,7 @@ const FS_NOTIFICATIONS = [
 ];
 
 const FS_USERS = [
-  {name:"UNKNOWN", init:"UN", email:"unknown@fundspark.io", role:"Founder", status:"Active", joined:"4 Aug 2026"},
+  {name:"Unknown", init:"UK", email:"unknown@fundspark.io", role:"Founder", status:"Active", joined:"4 Aug 2026"},
   {name:"Arjun Malhotra", init:"AM", email:"arjun.m@fundspark.io", role:"Investor", status:"Active", joined:"03 Feb 2026"},
   {name:"Aman Deshpande", init:"AD", email:"aman.d@fundspark.io", role:"Founder", status:"Active", joined:"22 Feb 2026"},
   {name:"Sneha Kapoor", init:"SK", email:"sneha.k@fundspark.io", role:"Investor", status:"Suspended", joined:"11 Mar 2026"},
