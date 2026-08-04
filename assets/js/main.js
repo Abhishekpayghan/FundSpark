@@ -19,6 +19,14 @@ function fsToggleTheme(){
   if(window.lucide) lucide.createIcons();
 }
 
+function fsLogout(e){
+  if(e) e.preventDefault();
+  localStorage.removeItem('fs-user');
+  sessionStorage.removeItem('fs-user');
+  fsToast('Logged out successfully.','success');
+  setTimeout(()=>{ location.href = (window.FS_BASE || '') + 'login.html'; }, 450);
+}
+
 /* ---------- Toasts ---------- */
 function fsToast(message, type='info', title=''){
   let stack = document.querySelector('.toast-stack');
@@ -139,6 +147,9 @@ document.addEventListener('click', (e)=>{
   }
   if(e.target.closest('#themeToggle')){
     fsToggleTheme();
+  }
+  if(e.target.closest('[data-logout]')){
+    fsLogout(e);
   }
   if(e.target.closest('#sidebarToggle')){
     document.getElementById('sidebar')?.classList.toggle('open');
