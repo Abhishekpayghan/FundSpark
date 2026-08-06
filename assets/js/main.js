@@ -149,6 +149,11 @@ document.addEventListener('click', (e)=>{
   if(e.target.closest('#themeToggle')){
     fsToggleTheme();
   }
+  if(e.target.closest('#topbarNotifications')){
+    const currentPath = window.location.pathname;
+    const target = currentPath.replace(/\/[^/]*$/, '/notifications.html');
+    window.location.href = target;
+  }
   if(e.target.closest('[data-logout]')){
     fsLogout(e);
   }

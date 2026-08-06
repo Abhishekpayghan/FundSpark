@@ -17,14 +17,14 @@
       <div class="page-head"><div><h1>Create Startup</h1><p class="text-muted">Publish a new campaign for investors to discover.</p></div></div>
 
       <div class="pill-nav mb-24">
-        <span class="pill active">1. Basics</span>
-        <span class="pill">2. Media</span>
-        <span class="pill">3. Funding</span>
-        <span class="pill">4. Team</span>
+        <button type="button" class="pill active" data-target="basicsSection">1. Basics</button>
+        <button type="button" class="pill" data-target="mediaSection">2. Media</button>
+        <button type="button" class="pill" data-target="fundingSection">3. Funding</button>
+        <button type="button" class="pill" data-target="teamSection">4. Team</button>
       </div>
 
       <form onsubmit="event.preventDefault(); fsToast('Startup submitted for admin approval.','success'); setTimeout(()=>location.href='my-startups.html',900);">
-        <div class="card card-pad mb-24">
+        <div id="basicsSection" class="card card-pad mb-24">
           <h4>Basic Information</h4>
           <div class="form-row">
             <div class="form-group"><label>Startup Name</label><input class="form-control" required placeholder="e.g. AgroSense"></div>
@@ -40,7 +40,7 @@
           </div>
         </div>
 
-        <div class="card card-pad mb-24">
+        <div id="mediaSection" class="card card-pad mb-24">
           <h4>Media &amp; Documents</h4>
           <div class="form-group"><label>Startup Logo</label><div class="upload-box"><i data-lucide="image-up"></i><p class="mt-8" style="margin:8px 0 0;">Click or drag to upload logo (PNG/JPG, max 2MB)</p></div></div>
           <div class="form-group"><label>Cover / Gallery Images</label><div class="upload-box"><i data-lucide="images"></i><p class="mt-8" style="margin:8px 0 0;">Upload up to 6 images</p></div></div>
@@ -48,7 +48,7 @@
           <div class="form-group"><label>Business Plan (PDF)</label><div class="upload-box"><i data-lucide="file-text"></i><p class="mt-8" style="margin:8px 0 0;">Upload your business plan document</p></div></div>
         </div>
 
-        <div class="card card-pad mb-24">
+        <div id="fundingSection" class="card card-pad mb-24">
           <h4>Funding Details</h4>
           <div class="form-row">
             <div class="form-group"><label>Funding Goal (₹)</label><input class="form-control" type="number" required placeholder="e.g. 2500000"></div>
@@ -66,7 +66,7 @@
           </div>
         </div>
 
-        <div class="card card-pad mb-24">
+        <div id="teamSection" class="card card-pad mb-24">
           <h4>Team Members</h4>
           <div id="teamRows">
             <div class="form-row mb-16"><input class="form-control" placeholder="Team member name"><input class="form-control" placeholder="Role"></div>
@@ -92,6 +92,18 @@ window.FS_AFTER_MOUNT = function(){
   document.querySelector('select.form-control').innerHTML = '<option value="">Select a category</option>' + FS_CATEGORIES.map(c=>`<option>${c.name}</option>`).join('');
   if(window.lucide) lucide.createIcons();
 };
+
+document.querySelectorAll('.pill-nav button.pill').forEach(button => {
+  button.addEventListener('click', () => {
+    document.querySelectorAll('.pill-nav button.pill').forEach(btn => btn.classList.remove('active'));
+    button.classList.add('active');
+    const targetId = button.dataset.target;
+    const target = document.getElementById(targetId);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
 </script>
 </body>
 </html>

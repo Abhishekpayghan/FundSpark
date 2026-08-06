@@ -176,7 +176,7 @@
       </div>
       <div class="topbar-actions">
         <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode"><i data-lucide="moon"></i></button>
-        <button class="btn-icon icon-btn-bell" aria-label="Notifications"><i data-lucide="bell"></i><span class="dot"></span></button>
+        ${role !== 'admin' ? `<button type="button" id="topbarNotifications" class="btn-icon icon-btn-bell" aria-label="Notifications"><i data-lucide="bell"></i><span class="dot"></span></button>` : ''}
         <a href="${BASE}index.html" class="btn btn-outline btn-sm logout-topbar" data-logout title="Log Out" aria-label="Log Out"><i data-lucide="log-out"></i><span>Log Out</span></a>
         <div class="user-chip">
           <div class="avatar">${init}</div>
