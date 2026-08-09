@@ -1,0 +1,86 @@
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+.env.private
+secrets/
+config/secrets/
+private/
+
+# Database Files & Credentials
+*.db
+*.sqlite
+*.sqlite3
+database/seeds.sql
+database/*.sql
+!database/schema.sql
+.postgresql_conf
+
+# API Keys & Tokens
+api_keys.txt
+tokens/
+*.key
+*.pem
+oauth/
+credentials/
+
+# Java/Maven Build Files
+target/
+.classpath
+.project
+.settings/
+.springBeans
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/timing.properties
+*.log
+
+# IDE Files
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Node/Frontend
+node_modules/
+npm-debug.log
+yarn-error.log
+dist/
+build/
+
+# Postman (to avoid exposing local environment/credentials)
+postman/environments/
+postman/*.env
+postman/local/
+
+# Temporary Files
+*.tmp
+*.temp
+tmp/
+temp/
+.cache/
+
+# OS Files
+.DS_Store
+Thumbs.db
+.directory
+
+# Package Manager Lock Files (optional - uncomment if desired)
+# package-lock.json
+# yarn.lock
+
+# Local Configuration
+application-local.properties
+application-dev.properties
+config.local.js

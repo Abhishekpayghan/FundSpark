@@ -1,0 +1,6 @@
+spring.application.name=fundspark_backend
+spring.datasource.url=${DB_URL:jdbc:mysql://localhost:3306/fundspark}
+spring.datasource.username=${DB_USERNAME:root}
+spring.datasource.password=${DB_PASSWORD:}
+spring.jpa.hibernate.ddl-auto=none
+spring.jpa.show-sql=true
