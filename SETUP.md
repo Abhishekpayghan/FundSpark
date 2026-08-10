@@ -43,12 +43,20 @@ These files are protected by `.gitignore` to prevent accidental commits.
 ## Running the Application
 
 ### With Environment Variables
+#### Linux / macOS (Bash)
 ```bash
 export DB_USERNAME=root
 export DB_PASSWORD=your_password
 mvn spring-boot:run
 ```
+#### Windows PowerShell
 
+> **For Windows users:** Run the following commands in PowerShell.
+
+```powershell
+$env:DB_USERNAME="root"
+$env:DB_PASSWORD="your_password"
+mvn spring-boot:run
 ### With application-local.properties
 The application will automatically load local credentials from `application-local.properties` if it exists.
 
