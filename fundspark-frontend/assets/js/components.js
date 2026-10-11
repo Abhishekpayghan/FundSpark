@@ -220,11 +220,13 @@
       if(sb) sb.innerHTML = sidebarHTML(role);
       if(tb) tb.innerHTML = topbarHTML(role,name,init);
 
+      const API_BASE = window.FS_API_BASE || (window.localStorage && localStorage.getItem('FS_API_BASE')) || 'http://localhost:8080/api';
+
       // Dynamically update sidebar investor badge for logged-in founder
       if(role === 'founder' && window.fsGetSession){
         const sess = fsGetSession();
         if(sess && sess.userId){
-          fetch(`http://localhost:8080/api/dashboard/founder/${sess.userId}`)
+          fetch(`${API_BASE}/dashboard/founder/${sess.userId}`)
             .then(res => res.ok ? res.json() : null)
             .then(kpi => {
               if(kpi && kpi.investorCount !== undefined){
@@ -237,7 +239,7 @@
 
       // Dynamically update sidebar Campaign Approval badge with the REAL pending count
       if(role === 'admin'){
-        fetch(`http://localhost:8080/api/dashboard/admin`)
+        fetch(`${API_BASE}/dashboard/admin`)
           .then(res => res.ok ? res.json() : null)
           .then(kpi => {
             if(kpi && kpi.pendingApprovals !== undefined){
@@ -246,7 +248,7 @@
             }
           }).catch(e => {});
           // Pending account deletion requests badge
-        fetch(`http://localhost:8080/api/deletion-requests/pending-count`)
+        fetch(`${API_BASE}/deletion-requests/pending-count`)
          .then(res => res.ok ? res.json() : null)
   .then(d => {
     if(d && d.count !== undefined){

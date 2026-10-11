@@ -7,7 +7,8 @@
    backend server isn't running.
    ========================================================== */
 
-const FS_API_BASE = "http://localhost:8080/api";
+// Base URL for API calls. Can be overridden dynamically via window.FS_API_BASE or localStorage.
+const FS_API_BASE = window.FS_API_BASE || localStorage.getItem('FS_API_BASE') || "http://localhost:8080/api";
 
 // category name -> brand color, used since the DB doesn't store a color per startup
 const FS_CATEGORY_COLORS = {
