@@ -7,8 +7,8 @@
    backend server isn't running.
    ========================================================== */
 
-// Base URL for API calls. Can be overridden dynamically via window.FS_API_BASE or localStorage.
-const FS_API_BASE = window.FS_API_BASE || localStorage.getItem('FS_API_BASE') || "http://localhost:8080/api";
+// Base URL for API calls. Points to your deployed Render backend, with support for local dev override.
+const FS_API_BASE = window.FS_API_BASE || (typeof localStorage !== 'undefined' && localStorage.getItem('FS_API_BASE')) || "https://fundspark-szj6.onrender.com/api";
 
 // category name -> brand color, used since the DB doesn't store a color per startup
 const FS_CATEGORY_COLORS = {
@@ -162,7 +162,7 @@ async function fsApiRegister(payload){
     return { success: res.ok, status: res.status, data };
   }catch(err){
     console.warn('FundSpark API unavailable — registration failed.', err);
-    return { success:false, status:0, data:{message:'Backend server is not reachable. Make sure it is running on localhost:8080.'} };
+    return { success:false, status:0, data:{message:'Backend server is temporarily unreachable. Please check your connection or try again.'} };
   }
 }
 
@@ -179,7 +179,7 @@ async function fsApiLogin(email, password){
     return { success: res.ok, status: res.status, data };
   }catch(err){
     console.warn('FundSpark API unavailable — login failed.', err);
-    return { success:false, status:0, data:{message:'Backend server is not reachable. Make sure it is running on localhost:8080.'} };
+    return { success:false, status:0, data:{message:'Backend server is temporarily unreachable. Please check your connection or try again.'} };
   }
 }
 
@@ -258,7 +258,7 @@ async function fsApiCreateStartup(payload){
     return { success: res.ok, status: res.status, data };
   }catch(err){
     console.warn('FundSpark API unavailable — create startup failed.', err);
-    return { success:false, status:0, data:{message:'Backend server is not reachable. Make sure it is running on localhost:8080.'} };
+    return { success:false, status:0, data:{message:'Backend server is temporarily unreachable. Please check your connection or try again.'} };
   }
 }
 

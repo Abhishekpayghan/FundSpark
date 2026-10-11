@@ -220,7 +220,7 @@
       if(sb) sb.innerHTML = sidebarHTML(role);
       if(tb) tb.innerHTML = topbarHTML(role,name,init);
 
-      const API_BASE = window.FS_API_BASE || (window.localStorage && localStorage.getItem('FS_API_BASE')) || 'http://localhost:8080/api';
+      const API_BASE = window.FS_API_BASE || (window.localStorage && localStorage.getItem('FS_API_BASE')) || 'https://fundspark-szj6.onrender.com/api';
 
       // Dynamically update sidebar investor badge for logged-in founder
       if(role === 'founder' && window.fsGetSession){

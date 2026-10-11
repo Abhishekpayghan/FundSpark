@@ -345,7 +345,7 @@ async function acceptRequest(id){
     if(res.ok){ fsToast('Request accepted. The investor has been notified.','success'); }
     else{ fsToast(data.message || 'Could not accept the request.','error'); }
   }catch(err){
-    fsToast('Backend server is not reachable. Make sure it is running on localhost:8080.','error');
+    fsToast('Backend server is temporarily unreachable. Please check your connection or try again.','error');
   }
   loadRequests();
 }
@@ -392,7 +392,7 @@ async function submitReject(e){
       fsToast(data.message || 'Could not reject the request.','error');
     }
   }catch(err){
-    fsToast('Backend server is not reachable. Make sure it is running on localhost:8080.','error');
+    fsToast('Backend server is temporarily unreachable. Please check your connection or try again.','error');
   }
   btn.disabled = false;
   loadRequests();

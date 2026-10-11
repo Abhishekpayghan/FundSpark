@@ -616,7 +616,7 @@ async function submitInvestRequest(e){
       fsToast(data.message || 'Could not send the request.','error');
     }
   }catch(err){
-    fsToast('Backend server is not reachable. Make sure it is running on localhost:8080.','error');
+    fsToast('Backend server is temporarily unreachable. Please check your connection or try again.','error');
   }
   submitBtn.disabled = false;
   await loadRequestStatus();

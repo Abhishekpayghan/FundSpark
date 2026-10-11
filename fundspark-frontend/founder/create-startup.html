@@ -213,7 +213,7 @@ async function handleCreateStartup(e){
     fsToast('Startup published — visible on the platform now, tagged Pending until an admin verifies it.','success');
     setTimeout(()=>location.href='my-startups.html',900);
   } else {
-    const message = result.data?.message || (result.status===0 ? 'Backend server is not reachable. Make sure it is running on localhost:8080.' : 'Failed to submit startup.');
+    const message = result.data?.message || (result.status===0 ? 'Backend server is temporarily unreachable. Please check your connection or try again.' : 'Failed to submit startup.');
     fsToast(message,'error');
     fsSubmittingStartup = false;
     submitBtn.disabled = false;

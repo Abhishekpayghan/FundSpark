@@ -167,7 +167,7 @@ async function loadMyStartups(){
       renderFilteredStartups();
     }catch(rawErr){
       console.warn('Could not load founder startups from backend.', rawErr);
-      document.getElementById('myStartupsGrid').innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon"><i data-lucide="wifi-off"></i></div><h4>Backend not reachable</h4><p>Start the Spring Boot backend on localhost:8080, then refresh this page.</p></div>`;
+      document.getElementById('myStartupsGrid').innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon"><i data-lucide="wifi-off"></i></div><h4>Backend not reachable</h4><p>Unable to connect to the backend server. Please check your connection and refresh this page.</p></div>`;
       if(window.lucide) lucide.createIcons();
     }
   }
