@@ -15,6 +15,33 @@
     <div id="fs-topbar"></div>
     <div class="page-wrap">
       <div class="page-head"><div><h1>Investors</h1><p class="text-muted">Everyone who has invested in or shown interest in your startups.</p></div></div>
+            <h2 style="font-size:20px;margin:8px 0 12px;">Investor Requests</h2>
+      <div class="grid-12" style="gap:12px;margin-bottom:16px;">
+        <div class="card card-pad" style="grid-column:span 3;text-align:center;"><b id="reqTotal" style="display:block;font-size:22px;">0</b><span class="text-sm text-muted">Total Requests</span></div>
+        <div class="card card-pad" style="grid-column:span 3;text-align:center;"><b id="reqPending" style="display:block;font-size:22px;">0</b><span class="text-sm text-muted">Pending</span></div>
+        <div class="card card-pad" style="grid-column:span 3;text-align:center;"><b id="reqAccepted" style="display:block;font-size:22px;">0</b><span class="text-sm text-muted">Accepted</span></div>
+        <div class="card card-pad" style="grid-column:span 3;text-align:center;"><b id="reqRejected" style="display:block;font-size:22px;">0</b><span class="text-sm text-muted">Rejected</span></div>
+      </div>
+      <div class="card" style="margin-bottom:32px;">
+        <div style="padding:14px 16px;display:flex;align-items:center;gap:10px;">
+          <label class="text-sm text-muted" for="reqFilter">Show:</label>
+          <select id="reqFilter" class="form-control" style="max-width:200px;" onchange="renderRequests()">
+            <option value="all">All requests</option>
+            <option value="pending">Pending</option>
+            <option value="accepted">Accepted</option>
+            <option value="rejected">Rejected</option>
+            <option value="used">Used (invested)</option>
+            <option value="expired">Expired</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Investor</th><th>Startup</th><th>Type</th><th>Intended Amount</th><th>Received</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="requestRows"></tbody>
+          </table>
+        </div>
+      </div>
+      <h2 style="font-size:20px;margin:8px 0 12px;">Investments</h2>
       <div class="card">
         <div class="table-wrap">
           <table class="data-table">
@@ -27,18 +54,352 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="verifyInvestorModal">
+  <div class="modal" style="max-width:780px;width:95%;max-height:92vh;overflow-y:auto;padding:24px;">
+    <button class="modal-close" onclick="fsCloseModal('verifyInvestorModal')"><i data-lucide="x"></i></button>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+      <div class="kpi-icon" style="width:40px;height:40px;background:rgba(37,99,235,0.12);color:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+        <i data-lucide="shield-check" style="width:22px;height:22px;"></i>
+      </div>
+      <div>
+        <h3 style="margin:0;font-size:18px;">Verify Investor Profile & Track Record</h3>
+        <p class="text-sm text-muted" style="margin:0;">Verify investor credentials, contact details, and past investments in other startups.</p>
+      </div>
+    </div>
+
+    <div id="verifyModalBody">
+      <div style="text-align:center;padding:36px;"><span class="text-sm text-muted">Loading investor verification records...</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="rejectModal">
+  <div class="modal" style="max-height:90vh;overflow-y:auto;">
+    <button class="modal-close" onclick="fsCloseModal('rejectModal')"><i data-lucide="x"></i></button>
+    <h3>Reject request</h3>
+    <p class="text-sm text-muted">The investor will see your reason, so they can fix it and send an updated request.</p>
+    <form id="rejectForm" onsubmit="submitReject(event)">
+      <input type="hidden" id="rejectRequestId">
+      <div class="form-group"><label>Reason</label>
+        <select class="form-control" id="rejectReason" required></select>
+      </div>
+      <div class="form-group"><label>Message to investor (10 to 500 characters)</label>
+        <textarea class="form-control" id="rejectMessage" rows="3" minlength="10" maxlength="500" placeholder="Explain what the investor should improve" required></textarea>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit">Reject Request</button>
+    </form>
+  </div>
+</div>
+
 <script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
 <script src="../assets/js/components.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-FS_MOUNT.dashboard('founder','Unknown','UK');
-const rows = [...FS_INVESTORS_LIST, {name:"Meera Pillai", init:"MP", amount:120000, date:"22 Jun 2026", status:"Confirmed"}, {name:"Farhan Ali", init:"FA", amount:35000, date:"18 Jun 2026", status:"Pending"}];
-document.getElementById('investorRows').innerHTML = rows.map(i=>`
-  <tr><td><div class="row-flex"><div class="avatar">${i.init}</div>${i.name}</div></td>
-  <td>AgroSense</td><td><b>${fsCurrency(i.amount)}</b></td><td>${i.date}</td>
-  <td><span class="badge ${i.status==='Confirmed'?'badge-success':'badge-warning'}">${i.status}</span></td>
-  <td><button class="btn btn-ghost btn-sm" onclick="fsToast('Message sent to ${i.name}.','success')"><i data-lucide="message-circle" style="width:14px;height:14px;"></i></button></td></tr>`).join('');
-window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); };
+const FS_SESSION = fsInitDashboard('founder'); if(!FS_SESSION) throw new Error('redirecting to login');
+
+function renderInvestorRows(rows){
+  document.getElementById('investorRows').innerHTML = rows.map(i=>{
+    const initials = i.investorInitials || (i.investorName||'??').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const date = new Date(i.investedAt).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+    const statusLabel = i.status.charAt(0).toUpperCase() + i.status.slice(1);
+    return `<tr><td><div class="row-flex"><div class="avatar">${initials}</div>${i.investorName}</div></td>
+    <td>${i.startupName}</td><td><b>${fsCurrency(i.amount)}</b></td><td>${date}</td>
+    <td><span class="badge ${i.status==='confirmed'?'badge-success':'badge-warning'}">${statusLabel}</span></td>
+    <td><button class="btn btn-ghost btn-sm" onclick="fsToast('Message sent to ${i.investorName}.','success')"><i data-lucide="message-circle" style="width:14px;height:14px;"></i></button></td></tr>`;
+  }).join('') || `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon"><i data-lucide="users"></i></div><h4>No investors yet</h4><p>Once someone invests in your startups, they'll show up here.</p></div></td></tr>`;
+  if(window.lucide) lucide.createIcons();
+}
+
+async function loadMyInvestors(){
+  try{
+    const res = await fetch(`${FS_API_BASE}/investments/founder/${FS_SESSION.userId}/feed`);
+    if(!res.ok) throw new Error('bad response');
+    const rows = await res.json();
+    renderInvestorRows(rows);
+    if(rows.length) fsToast('Loaded live investor data from the database.','success');
+  }catch(err){
+    console.warn('API unavailable, showing demo investors instead.', err);
+    const rows = [...FS_INVESTORS_LIST, {name:"Meera Pillai", init:"MP", amount:120000, date:"22 Jun 2026", status:"Confirmed"}];
+    document.getElementById('investorRows').innerHTML = rows.map(i=>`
+      <tr><td><div class="row-flex"><div class="avatar">${i.init}</div>${i.name}</div></td>
+      <td>AgroSense</td><td><b>${fsCurrency(i.amount)}</b></td><td>${i.date}</td>
+      <td><span class="badge ${i.status==='Confirmed'?'badge-success':'badge-warning'}">${i.status}</span></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="fsToast('Message sent to ${i.name}.','success')"><i data-lucide="message-circle" style="width:14px;height:14px;"></i></button></td></tr>`).join('');
+    if(window.lucide) lucide.createIcons();
+  }
+}
+
+// ==== Investor requests (approval flow) ====
+let ALL_REQUESTS = [];
+const REQ_BASE = `${FS_API_BASE}/investment-requests`;
+
+function esc(t){
+  return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+const REQ_BADGES = {
+  pending:  'badge-warning',
+  accepted: 'badge-success',
+  rejected: 'badge-danger',
+  used:     'badge-secondary',
+  expired:  'badge-secondary'
+};
+
+async function loadRequests(){
+  try{
+    const res = await fetch(`${REQ_BASE}/founder/${FS_SESSION.userId}`);
+    if(!res.ok) throw new Error('bad response');
+    ALL_REQUESTS = await res.json();
+  }catch(err){
+    console.warn('Could not load investor requests.', err);
+    ALL_REQUESTS = [];
+    fsToast('Could not load investor requests. Is the backend running?','error');
+  }
+  renderRequests();
+}
+
+function renderRequests(){
+  const count = s => ALL_REQUESTS.filter(r => r.status === s).length;
+  document.getElementById('reqTotal').textContent = ALL_REQUESTS.length;
+  document.getElementById('reqPending').textContent = count('pending');
+  document.getElementById('reqAccepted').textContent = count('accepted');
+  document.getElementById('reqRejected').textContent = count('rejected');
+
+  const filter = document.getElementById('reqFilter').value;
+  const rows = filter === 'all' ? ALL_REQUESTS : ALL_REQUESTS.filter(r => r.status === filter);
+
+  document.getElementById('requestRows').innerHTML = rows.map(r => {
+    const initials = r.investorInitials || (r.investorName || '??').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+    const date = new Date(r.createdAt).toLocaleString('en-IN', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
+    const statusLabel = r.status.charAt(0).toUpperCase() + r.status.slice(1);
+    const attempt = r.previousAttempts > 0 ? `<div class="text-sm" style="color:var(--warning);">Attempt #${r.previousAttempts + 1}</div>` : '';
+    const rejectedInfo = r.status === 'rejected'
+      ? `<div class="text-sm mt-8"><b>Rejection reason:</b> ${esc(r.rejectionReason)}<br>${esc(r.rejectionMessage)}</div>` : '';
+    const actions = r.status === 'pending'
+      ? `<div class="flex gap-8">
+           <button class="btn btn-primary btn-sm" onclick="acceptRequest(${r.id})">Accept</button>
+           <button class="btn btn-outline btn-sm" onclick="openRejectModal(${r.id})">Reject</button>
+         </div>`
+      : '<span class="text-sm text-muted">—</span>';
+    return `<tr>
+      <td>
+        <div class="row-flex"><div class="avatar">${esc(initials)}</div><div><b>${esc(r.investorName)}</b><div class="text-sm text-muted">${esc(r.investorLocation || '')}</div>${attempt}</div></div>
+        <div class="mt-8 flex gap-8">
+          <button class="btn btn-outline btn-sm" style="padding:4px 9px;font-size:12px;color:var(--primary);border-color:var(--primary);display:inline-flex;align-items:center;gap:4px;" onclick="openInvestorVerificationModal(${r.investorId}, ${r.id})">
+            <i data-lucide="shield-check" style="width:13px;height:13px;"></i> Verify Investor
+          </button>
+        </div>
+        <details class="mt-8"><summary class="text-sm" style="cursor:pointer;color:var(--text-muted);">View message & details</summary>
+          <div class="text-sm mt-8"><b>Purpose:</b> ${esc(r.purpose)}</div>
+          <div class="text-sm mt-8"><b>Experience:</b> ${esc(r.experience || 'Not provided')}</div>
+          <div class="text-sm mt-8"><b>Message:</b> ${esc(r.messageToFounder || 'Not provided')}</div>
+          ${rejectedInfo}
+        </details>
+      </td>
+      <td>${esc(r.startupName)}</td>
+      <td>${esc(r.investorType)}</td>
+      <td><b>${fsCurrency(r.intendedAmount)}</b></td>
+      <td>${date}</td>
+      <td><span class="badge ${REQ_BADGES[r.status] || 'badge-secondary'}">${statusLabel}</span></td>
+      <td>${actions}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon"><i data-lucide="inbox"></i></div><h4>No requests here</h4><p>Investor requests for your startups will show up here.</p></div></td></tr>`;
+  if(window.lucide) lucide.createIcons();
+}
+
+async function openInvestorVerificationModal(investorId, requestId){
+  const req = ALL_REQUESTS.find(r => r.id === requestId);
+  const modalBody = document.getElementById('verifyModalBody');
+  modalBody.innerHTML = `<div style="text-align:center;padding:36px;"><span class="text-sm text-muted">Loading investor profile and portfolio from database...</span></div>`;
+  fsOpenModal('verifyInvestorModal');
+
+  const data = await fsApiGetInvestorVerificationProfile(investorId);
+  if(!data || !data.investor){
+    modalBody.innerHTML = `<div class="empty-state"><h4>Could not load verification data</h4><p>Unable to retrieve investor records from the backend.</p></div>`;
+    return;
+  }
+
+  const u = data.investor;
+  const badge = data.badge || { tierName:'Bronze', icon:'award', colorCode:'#CD7F32' };
+  const initials = u.avatarInitials || (u.fullName || '??').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  const joinedDate = u.joinedAt ? new Date(u.joinedAt).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'}) : '—';
+  
+  // Separate investments in other startups
+  const portfolio = data.portfolio || [];
+  const otherStartups = req ? portfolio.filter(p => Number(p.startupId) !== Number(req.startupId)) : portfolio;
+
+  let portfolioHtml = '';
+  if(otherStartups.length > 0){
+    portfolioHtml = `
+      <div class="table-wrap mt-12" style="border:1px solid var(--border);border-radius:8px;">
+        <table class="data-table">
+          <thead><tr><th>Startup</th><th>Category</th><th>Amount Invested</th><th>Equity Stake</th><th>Date</th><th>Status</th></tr></thead>
+          <tbody>
+            ${otherStartups.map(p => {
+              const invDate = p.investedAt ? new Date(p.investedAt).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'}) : '—';
+              const isConfirmed = String(p.status).toLowerCase() === 'confirmed';
+              return `<tr>
+                <td><b>${esc(p.startupName)}</b><div class="text-sm text-muted">${esc(p.startupTagline || '')}</div></td>
+                <td><span class="badge badge-secondary">${esc(p.category || 'General')}</span></td>
+                <td><b>${fsCurrency(p.amount)}</b></td>
+                <td><span class="badge badge-primary">${Number(p.equityPercentage || 0).toFixed(2)}%</span></td>
+                <td>${invDate}</td>
+                <td><span class="badge ${isConfirmed ? 'badge-success' : 'badge-warning'}">${esc(p.status)}</span></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } else {
+    portfolioHtml = `
+      <div style="background:var(--bg-muted, #f8fafc);padding:14px;border-radius:8px;border:1px dashed var(--border);margin-top:10px;">
+        <p class="text-sm text-muted" style="margin:0;">No prior investments recorded in other startups on FundSpark. This may be their first investment request.</p>
+      </div>`;
+  }
+
+  modalBody.innerHTML = `
+    <!-- Top Investor Card -->
+    <div class="card card-pad" style="background:linear-gradient(135deg, rgba(37,99,235,0.04), rgba(124,58,237,0.04));border:1px solid var(--border);margin-bottom:16px;">
+      <div class="flex justify-between items-center" style="flex-wrap:wrap;gap:12px;">
+        <div class="row-flex" style="gap:14px;">
+          <div class="avatar" style="width:48px;height:48px;font-size:18px;">${esc(initials)}</div>
+          <div>
+            <h4 style="margin:0 0 4px;font-size:16px;">${esc(u.fullName)}</h4>
+            <div class="text-sm text-muted">${esc(u.email)} · ${esc(u.phone)}</div>
+            <div class="text-sm text-muted">${esc(u.location)} · Member since ${joinedDate}</div>
+          </div>
+        </div>
+        <div>
+          <span class="badge" style="background:${badge.colorCode}22;color:${badge.colorCode};border:1px solid ${badge.colorCode}44;padding:6px 12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+            <i data-lucide="${badge.icon || 'award'}" style="width:14px;height:14px;"></i> ${badge.tierName} Investor
+          </span>
+        </div>
+      </div>
+      ${u.bio ? `<p class="text-sm mt-12" style="margin-bottom:0;color:var(--text-muted);"><b>Bio:</b> ${esc(u.bio)}</p>` : ''}
+    </div>
+
+    <!-- Track Record Stats -->
+    <div class="grid-12" style="gap:12px;margin-bottom:20px;">
+      <div class="card card-pad" style="grid-column:span 4;text-align:center;">
+        <b style="display:block;font-size:20px;color:var(--primary);">${fsCurrency(data.totalConfirmedInvested || 0)}</b>
+        <span class="text-sm text-muted">Total Capital Deployed</span>
+      </div>
+      <div class="card card-pad" style="grid-column:span 4;text-align:center;">
+        <b style="display:block;font-size:20px;">${data.startupsBackedCount || 0}</b>
+        <span class="text-sm text-muted">Startups Backed</span>
+      </div>
+      <div class="card card-pad" style="grid-column:span 4;text-align:center;">
+        <b style="display:block;font-size:20px;">${data.totalInvestmentsCount || 0}</b>
+        <span class="text-sm text-muted">Total Investment Deals</span>
+      </div>
+    </div>
+
+    <!-- Investments in Other Startups Section -->
+    <div style="margin-bottom:24px;">
+      <div class="flex justify-between items-center">
+        <h4 style="font-size:15px;margin:0;"><i data-lucide="layers" style="width:15px;height:15px;vertical-align:middle;margin-right:6px;color:var(--primary);"></i> Investments in Other Startups</h4>
+        <span class="badge badge-secondary">${otherStartups.length} startup(s)</span>
+      </div>
+      ${portfolioHtml}
+    </div>
+
+    <!-- Current Investment Request Proposal -->
+    ${req ? `
+    <div class="card card-pad" style="border:1px solid var(--border);margin-bottom:20px;">
+      <h4 style="font-size:15px;margin:0 0 12px;"><i data-lucide="file-text" style="width:15px;height:15px;vertical-align:middle;margin-right:6px;color:var(--primary);"></i> Current Request Proposal for ${esc(req.startupName)}</h4>
+      <div class="grid-12" style="gap:12px;margin-bottom:12px;">
+        <div style="grid-column:span 6;"><span class="text-sm text-muted">Intended Investment:</span> <b style="font-size:15px;color:var(--success);display:block;">${fsCurrency(req.intendedAmount)}</b></div>
+        <div style="grid-column:span 6;"><span class="text-sm text-muted">Investor Type:</span> <b style="display:block;">${esc(req.investorType)}</b></div>
+      </div>
+      <div class="text-sm mb-8"><b>Investment Purpose:</b> ${esc(req.purpose)}</div>
+      <div class="text-sm mb-8"><b>Background / Experience:</b> ${esc(req.experience || 'Not provided')}</div>
+      <div class="text-sm"><b>Message to Founder:</b> ${esc(req.messageToFounder || 'Not provided')}</div>
+    </div>
+    ` : ''}
+
+    <!-- Decision Footer -->
+    <div class="flex justify-between items-center mt-20" style="padding-top:16px;border-top:1px solid var(--border);">
+      <button class="btn btn-ghost" onclick="fsCloseModal('verifyInvestorModal')">Close</button>
+      ${req && req.status === 'pending' ? `
+        <div class="flex gap-8">
+          <button class="btn btn-outline" style="color:var(--danger);border-color:var(--danger);" onclick="fsCloseModal('verifyInvestorModal'); openRejectModal(${req.id})">Reject Request</button>
+          <button class="btn btn-primary" onclick="fsCloseModal('verifyInvestorModal'); acceptRequest(${req.id})"><i data-lucide="check"></i> Accept Request</button>
+        </div>
+      ` : req ? `
+        <div><span class="text-sm text-muted" style="margin-right:8px;">Status:</span><span class="badge ${REQ_BADGES[req.status] || 'badge-secondary'}">${req.status.toUpperCase()}</span></div>
+      ` : ''}
+    </div>
+  `;
+
+  if(window.lucide) lucide.createIcons();
+}
+
+
+async function acceptRequest(id){
+  if(!confirm('Accept this request? The investor will be able to invest once.')) return;
+  try{
+    const res = await fetch(`${REQ_BASE}/${id}/accept?founderId=${FS_SESSION.userId}`, {method:'PUT'});
+    const data = await res.json().catch(() => ({}));
+    if(res.ok){ fsToast('Request accepted. The investor has been notified.','success'); }
+    else{ fsToast(data.message || 'Could not accept the request.','error'); }
+  }catch(err){
+    fsToast('Backend server is not reachable. Make sure it is running on localhost:8080.','error');
+  }
+  loadRequests();
+}
+
+async function openRejectModal(id){
+  document.getElementById('rejectRequestId').value = id;
+  document.getElementById('rejectMessage').value = '';
+  const sel = document.getElementById('rejectReason');
+  if(!sel.options.length){
+    try{
+      const res = await fetch(`${REQ_BASE}/reject-reasons`);
+      const reasons = await res.json();
+      sel.innerHTML = '<option value="">Select a reason</option>' +
+        reasons.map(r => `<option value="${esc(r.code)}">${esc(r.label)}</option>`).join('');
+    }catch(err){
+      fsToast('Could not load rejection reasons.','error');
+      return;
+    }
+  }
+  sel.value = '';
+  fsOpenModal('rejectModal');
+}
+
+async function submitReject(e){
+  e.preventDefault();
+  const id = document.getElementById('rejectRequestId').value;
+  const btn = e.target.querySelector('button[type=submit]');
+  btn.disabled = true;
+  try{
+    const res = await fetch(`${REQ_BASE}/${id}/reject`, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        founderId: FS_SESSION.userId,
+        reasonCode: document.getElementById('rejectReason').value,
+        message: document.getElementById('rejectMessage').value.trim()
+      })
+    });
+    const data = await res.json().catch(() => ({}));
+    if(res.ok){
+      fsCloseModal('rejectModal');
+      fsToast('Request rejected. The investor has been notified with your reason.','success');
+    }else{
+      fsToast(data.message || 'Could not reject the request.','error');
+    }
+  }catch(err){
+    fsToast('Backend server is not reachable. Make sure it is running on localhost:8080.','error');
+  }
+  btn.disabled = false;
+  loadRequests();
+}
+// ==== END investor requests ====
+
+window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); loadRequests(); loadMyInvestors(); };
 </script>
 </body>
 </html>

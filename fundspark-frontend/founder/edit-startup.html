@@ -16,10 +16,11 @@
     <div class="page-wrap" style="max-width:880px;">
       <div class="page-head">
         <div><h1 id="editTitle">Edit Startup</h1><p class="text-muted">Update your campaign details.</p></div>
-        <span class="badge badge-success">Live Campaign</span>
+        <span class="badge badge-success" id="statusBadge">Live Campaign</span>
       </div>
 
-      <form onsubmit="event.preventDefault(); fsToast('Changes saved successfully.','success');">
+      <div id="formWrap" style="display:none;">
+      <form id="editForm">
         <div class="card card-pad mb-24">
           <h4>Basic Information</h4>
           <div class="form-row">
@@ -28,6 +29,7 @@
           </div>
           <div class="form-group"><label>One-line Tagline</label><input class="form-control" id="fTagline" required></div>
           <div class="form-group"><label>Detailed Description</label><textarea class="form-control" rows="4" id="fDesc"></textarea></div>
+          <div class="form-group"><label>Location</label><input class="form-control" id="fLocation" placeholder="City, State"></div>
         </div>
         <div class="card card-pad mb-24">
           <h4>Funding Details</h4>
@@ -36,40 +38,184 @@
             <div class="form-group"><label>Amount Raised (₹)</label><input class="form-control" type="number" id="fRaised" disabled></div>
           </div>
           <div class="form-group"><label>Campaign Deadline</label><input class="form-control" type="date" id="fDeadline"></div>
+          <p class="text-sm text-muted" style="margin:0;">Amount raised updates automatically as investors invest — it can't be edited directly here.</p>
         </div>
         <div class="card card-pad mb-24">
           <h4>Media</h4>
           <div class="form-group"><label>Replace Logo</label><div class="upload-box"><i data-lucide="image-up"></i><p style="margin:8px 0 0;">Click or drag to upload a new logo</p></div></div>
           <div class="form-group"><label>Replace Gallery Images</label><div class="upload-box"><i data-lucide="images"></i><p style="margin:8px 0 0;">Upload new images</p></div></div>
+          <p class="text-sm text-muted" style="margin:0;">File uploads aren't wired to storage in this prototype — form fields above save to the database.</p>
+        </div>
+                <div class="card card-pad mb-24">
+          <h4>Verification Documents</h4>
+          <p class="text-sm text-muted" style="margin:0 0 12px;">Already uploaded documents are listed below. Add any new genuine document (GST, PAN, Trademark, Udyam, Bank Proof, etc.) you'd now like to submit for admin verification.</p>
+          <div id="existingDocsList" class="mb-16"></div>
+          <div id="newDocRows">
+            <div class="form-row mb-16 doc-row">
+              <input class="form-control doc-name" placeholder="Document name (e.g. GST Certificate)">
+              <input type="file" class="form-control doc-file" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('newDocRows').insertAdjacentHTML('beforeend','&lt;div class=\'form-row mb-16 doc-row\'&gt;&lt;input class=\'form-control doc-name\' placeholder=\'Document name\'&gt;&lt;input type=\'file\' class=\'form-control doc-file\' accept=\'.pdf,.jpg,.jpeg,.png\'&gt;&lt;/div&gt;')"><i data-lucide="plus"></i> Add Document</button>
         </div>
         <div class="flex gap-12 justify-between">
-          <button type="button" class="btn btn-ghost" style="color:var(--danger);" onclick="fsToast('Campaign closed.','info')"><i data-lucide="pause-circle"></i> Close Campaign</button>
-          <button type="submit" class="btn btn-primary btn-lg"><i data-lucide="save"></i> Save Changes</button>
+          <button type="button" class="btn btn-ghost" style="color:var(--danger);" onclick="closeCampaign()"><i data-lucide="pause-circle"></i> Close Campaign</button>
+          <button type="submit" class="btn btn-primary btn-lg" id="saveBtn"><i data-lucide="save"></i> Save Changes</button>
         </div>
       </form>
+      </div>
+
+      <div class="empty-state" id="loadingState">
+        <div class="empty-icon"><i data-lucide="loader-circle"></i></div>
+        <h4>Loading your startup...</h4>
+      </div>
+      <div class="empty-state" id="errorState" style="display:none;">
+        <div class="empty-icon"><i data-lucide="alert-triangle"></i></div>
+        <h4 id="errorMsg">Couldn't load this startup</h4>
+        <a href="my-startups.html" class="btn btn-outline btn-sm">Back to My Startups</a>
+      </div>
     </div>
   </div>
 </div>
 
 <script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
 <script src="../assets/js/components.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-FS_MOUNT.dashboard('founder','Unknown','UK');
-const id = parseInt(new URLSearchParams(location.search).get('id')) || 1;
-const s = FS_STARTUPS.find(x=>x.id===id) || FS_STARTUPS[0];
-window.FS_AFTER_MOUNT = function(){
-  document.getElementById('editTitle').textContent = 'Edit — ' + s.name;
-  document.getElementById('fName').value = s.name;
-  document.getElementById('fTagline').value = s.tagline;
-  document.getElementById('fDesc').value = s.tagline + ' Currently scaling operations after strong pilot traction.';
-  document.getElementById('fGoal').value = s.goal;
-  document.getElementById('fRaised').value = s.raised;
-  document.getElementById('fDeadline').value = '2026-09-15';
-  const sel = document.getElementById('fCat');
-  sel.innerHTML = FS_CATEGORIES.map(c=>`<option ${c.name===s.category?'selected':''}>${c.name}</option>`).join('');
+const FS_SESSION = fsInitDashboard('founder'); if(!FS_SESSION) throw new Error('redirecting to login');
+const id = parseInt(new URLSearchParams(location.search).get('id'));
+let categoriesCache = [];
+
+function showError(msg){
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('formWrap').style.display = 'none';
+  document.getElementById('errorState').style.display = 'block';
+  document.getElementById('errorMsg').textContent = msg;
   if(window.lucide) lucide.createIcons();
-};
+}
+
+async function loadStartup(){
+  if(!id){ showError('No startup selected.'); return; }
+  try{
+    const [startupRes, catRes] = await Promise.all([
+      fetch(`${FS_API_BASE}/startups/${id}`),
+      fetch(`${FS_API_BASE}/categories`)
+    ]);
+    if(!startupRes.ok) throw new Error('Startup not found');
+    const s = await startupRes.json();
+    categoriesCache = catRes.ok ? await catRes.json() : [];
+
+    // Ownership check — a founder can only edit their OWN startups, even if they
+    // guess another startup's id in the URL.
+    if(s.founderId !== FS_SESSION.userId){
+      showError("This startup doesn't belong to your account, so you can't edit it.");
+      return;
+    }
+
+    document.getElementById('editTitle').textContent = 'Edit — ' + s.name;
+    document.getElementById('fName').value = s.name || '';
+    document.getElementById('fTagline').value = s.tagline || '';
+    document.getElementById('fDesc').value = s.description || '';
+    document.getElementById('fLocation').value = s.location || '';
+    document.getElementById('fGoal').value = s.fundingGoal || 0;
+    document.getElementById('fRaised').value = s.amountRaised || 0;
+    document.getElementById('fDeadline').value = s.deadline || '';
+
+    const statusBadge = document.getElementById('statusBadge');
+    const statusMap = { live:['Live Campaign','badge-success'], pending:['Pending Approval','badge-warning'], closed:['Closed','badge-secondary'], rejected:['Rejected','badge-danger'], draft:['Draft','badge-secondary'] };
+    const [label, cls] = statusMap[s.status] || ['Unknown','badge-secondary'];
+    statusBadge.textContent = label;
+    statusBadge.className = 'badge ' + cls;
+
+    const sel = document.getElementById('fCat');
+    sel.innerHTML = categoriesCache.map(c=>`<option value="${c.categoryId}" ${c.categoryId===s.categoryId?'selected':''}>${c.name}</option>`).join('');
+
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('formWrap').style.display = 'block';
+    if(window.lucide) lucide.createIcons();
+      await loadExistingDocuments();
+    document.getElementById('editForm').addEventListener('submit', (e)=>saveStartup(e, s));
+  }catch(err){
+    console.error(err);
+    showError('Could not load this startup. Make sure the backend server is running.');
+  }
+}
+async function loadExistingDocuments(){
+  const docs = await fsApiGetStartupDocuments(id);
+  const list = document.getElementById('existingDocsList');
+  if(!docs.length){
+    list.innerHTML = '<p class="text-sm text-muted">No documents uploaded yet.</p>';
+    return;
+  }
+  list.innerHTML = docs.map(d => `
+    <div class="flex justify-between items-center" style="padding:8px 0;border-bottom:1px solid var(--border);">
+      <span><i data-lucide="file-check"></i> ${d.documentName}</span>
+      <a href="${d.documentUrl}" target="_blank" class="btn btn-ghost btn-sm">View</a>
+    </div>
+  `).join('');
+  if(window.lucide) lucide.createIcons();
+}
+
+async function saveStartup(e, original){
+  e.preventDefault();
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.disabled = true; saveBtn.textContent = 'Saving...';
+
+  const payload = {
+    name: document.getElementById('fName').value,
+    tagline: document.getElementById('fTagline').value,
+    description: document.getElementById('fDesc').value,
+    location: document.getElementById('fLocation').value,
+    categoryId: parseInt(document.getElementById('fCat').value),
+    fundingGoal: parseFloat(document.getElementById('fGoal').value),
+    deadline: document.getElementById('fDeadline').value
+  };
+
+  try{
+    const res = await fetch(`${FS_API_BASE}/startups/${id}`, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+      if(!res.ok) throw new Error('Save failed');
+
+    // Upload any newly added verification documents (skips any row left blank)
+    const newRows = document.querySelectorAll('#newDocRows .doc-row');
+    for(const row of newRows){
+      const docName = row.querySelector('.doc-name').value.trim();
+      const docFile = row.querySelector('.doc-file').files[0];
+      if(docName && docFile){
+        const url = await fsApiUploadFile(docFile);
+        if(url) await fsApiAddStartupDocument(id, docName, url);
+      }
+    }
+    await loadExistingDocuments();
+    document.getElementById('newDocRows').innerHTML = '<div class="form-row mb-16 doc-row"><input class="form-control doc-name" placeholder="Document name (e.g. GST Certificate)"><input type="file" class="form-control doc-file" accept=".pdf,.jpg,.jpeg,.png"></div>';
+
+    fsToast('Changes saved to the database.','success');
+  }catch(err){
+    console.warn('API unavailable — changes not saved to backend.', err);
+    fsToast('Backend unreachable — changes were not saved.','error');
+  }finally{
+    saveBtn.disabled = false; saveBtn.innerHTML = '<i data-lucide="save"></i> Save Changes';
+    if(window.lucide) lucide.createIcons();
+  }
+}
+
+async function closeCampaign(){
+  if(!confirm('Close this campaign? It will be removed from the public portal immediately. This can\'t be undone from here.')) return;
+  const ok = await fsApiCloseStartup(id);
+  if(ok){
+    fsToast('Campaign closed and removed from the public portal.','success');
+    setTimeout(()=>location.href='my-startups.html', 900);
+  }else{
+    fsToast('Could not close campaign — backend unreachable.','error');
+  }
+}
+
+window.FS_AFTER_MOUNT = function(){ loadStartup(); };
 </script>
 </body>
 </html>

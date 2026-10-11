@@ -32,7 +32,7 @@
       <div class="msg-shell">
         <div class="msg-list" id="msgList"></div>
         <div class="msg-thread">
-          <div class="thread-head"><div class="avatar" id="threadAvatar">UK</div><div><b id="threadName" style="font-size:14px;">Unknown</b><div class="text-sm text-muted">Founder, AgroSense</div></div></div>
+          <div class="thread-head"><div class="avatar" id="threadAvatar">RK</div><div><b id="threadName" style="font-size:14px;">Riya Kulkarni</b><div class="text-sm text-muted">Founder, AgroSense</div></div></div>
           <div class="thread-body" id="threadBody"></div>
           <div class="thread-input"><input class="form-control" id="msgInput" placeholder="Type a message..."><button class="btn btn-primary" onclick="sendMsg()"><i data-lucide="send"></i></button></div>
         </div>
@@ -42,12 +42,13 @@
 </div>
 
 <script src="../assets/js/data.js"></script>
+<script src="../assets/js/auth.js"></script>
 <script src="../assets/js/components.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-FS_MOUNT.dashboard('investor','Sanket Jadhav','SJ');
+const FS_SESSION = fsInitDashboard('investor'); if(!FS_SESSION) throw new Error('redirecting to login');
 const threads = [
-  {init:"UK", name:"Unknown", sub:"Founder, AgroSense", last:"Thanks for investing! Here's the Q3 update...", time:"10m", unread:true},
+  {init:"RK", name:"Riya Kulkarni", sub:"Founder, AgroSense", last:"Thanks for investing! Here's the Q3 update...", time:"10m", unread:true},
   {init:"AD", name:"Aman Deshpande", sub:"Founder, MediTrack AI", last:"Sure, I can share the pilot results.", time:"1h", unread:false},
   {init:"SK", name:"Simran Kaur", sub:"Founder, PayNest", last:"We closed the round — thank you!", time:"1d", unread:false},
 ];

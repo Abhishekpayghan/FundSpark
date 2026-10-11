@@ -7,7 +7,17 @@ function fsChartDefaults(){
   return { text: dark ? '#94A3B8' : '#64748B', grid: dark ? '#1F2A3D' : '#E2E8F0' };
 }
 
+// NEW: destroys any Chart.js instance already attached to this canvas before
+// a new one is created on it. Without this, re-rendering the SAME canvas
+// (e.g. switching a dropdown and calling loadAnalytics() again) throws
+// "Canvas is already in use" and silently stops all code after it.
+function fsDestroyChart(ctx){
+  const existing = Chart.getChart(ctx);
+  if(existing) existing.destroy();
+}
+
 function fsLineChart(ctx, labels, datasets){
+  fsDestroyChart(ctx);
   const d = fsChartDefaults();
   return new Chart(ctx, {
     type:'line',
@@ -31,6 +41,7 @@ function fsLineChart(ctx, labels, datasets){
 }
 
 function fsBarChart(ctx, labels, data, color){
+  fsDestroyChart(ctx);
   const d = fsChartDefaults();
   return new Chart(ctx, {
     type:'bar',
@@ -44,6 +55,7 @@ function fsBarChart(ctx, labels, data, color){
 }
 
 function fsDoughnut(ctx, labels, data, colors){
+  fsDestroyChart(ctx);
   const d = fsChartDefaults();
   return new Chart(ctx, {
     type:'doughnut',

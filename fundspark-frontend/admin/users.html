@@ -38,34 +38,52 @@
 </div>
 
 <script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
 <script src="../assets/js/components.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-FS_MOUNT.dashboard('admin','Pratiksha','PH');
+const FS_SESSION = fsInitDashboard('admin'); if(!FS_SESSION) throw new Error('redirecting to login');
 let st = {search:"",role:"All",status:""};
-function statusBadge(s){ return s==='Active' ? 'badge-success' : s==='Suspended' ? 'badge-danger' : 'badge-warning'; }
+let adminUsers = [];
+function statusBadge(s){
+  const st = String(s||'active').toLowerCase();
+  return st==='active' ? 'badge-success' : st==='suspended' ? 'badge-danger' : 'badge-warning';
+}
+async function loadAdminUsers(){
+  const list = await fsApiGetUsers();
+  adminUsers = list || [];
+  render();
+}
 function render(){
-  let list = FS_USERS.filter(u=>{
-    if(st.role!=='All' && u.role!==st.role) return false;
-    if(st.status && u.status!==st.status) return false;
-    if(st.search && !(u.name+u.email).toLowerCase().includes(st.search.toLowerCase())) return false;
+  let list = adminUsers.filter(u=>{
+    if(st.role!=='All' && (u.role||'').toLowerCase() !== st.role.toLowerCase()) return false;
+    if(st.status && (u.status||'').toLowerCase() !== st.status.toLowerCase()) return false;
+    if(st.search && !( (u.fullName||u.name||'') + (u.email||'') ).toLowerCase().includes(st.search.toLowerCase())) return false;
     return true;
   });
-  document.getElementById('userRows').innerHTML = list.map(u=>`
-    <tr><td><div class="row-flex"><div class="avatar">${u.init}</div><div><b style="font-size:13.5px;display:block;">${u.name}</b><span class="text-sm text-muted">${u.email}</span></div></div></td>
-    <td><span class="badge ${u.role==='Founder'?'badge-primary':'badge-secondary'}">${u.role}</span></td>
-    <td><span class="badge ${statusBadge(u.status)}">${u.status}</span></td>
-    <td>${u.joined}</td>
+  document.getElementById('userRows').innerHTML = list.map(u=>{
+    const name = u.fullName || u.name || 'Unknown';
+    const initials = u.avatarInitials || name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const roleLabel = (u.role||'').charAt(0).toUpperCase() + (u.role||'').slice(1).toLowerCase();
+    const statusLabel = (u.status||'active').charAt(0).toUpperCase() + (u.status||'active').slice(1).toLowerCase();
+    const joined = u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'}) : (u.joined || '—');
+    return `
+    <tr><td><div class="row-flex"><div class="avatar">${initials}</div><div><b style="font-size:13.5px;display:block;">${name}</b><span class="text-sm text-muted">${u.email || ''}</span></div></div></td>
+    <td><span class="badge ${roleLabel==='Founder'?'badge-primary':'badge-secondary'}">${roleLabel}</span></td>
+    <td><span class="badge ${statusBadge(u.status)}">${statusLabel}</span></td>
+    <td>${joined}</td>
     <td><div class="flex gap-8">
-      <button class="btn-icon" title="View" onclick="fsToast('Viewing profile for ${u.name}.','info')"><i data-lucide="eye" style="width:14px;height:14px;"></i></button>
-      <button class="btn-icon" title="Suspend" onclick="fsToast('${u.name} has been suspended.','error')"><i data-lucide="ban" style="width:14px;height:14px;"></i></button>
-    </div></td></tr>`).join('') || `<tr><td colspan="5"><div class="empty-state"><div class="empty-icon"><i data-lucide="users"></i></div><h4>No users found</h4></div></td></tr>`;
+      <button class="btn-icon" title="View Profile" onclick="fsToast('User: ${name} (${u.email})','info')"><i data-lucide="eye" style="width:14px;height:14px;"></i></button>
+      <button class="btn-icon" title="Toggle Status" onclick="fsToast('${name} status updated.','success')"><i data-lucide="shield" style="width:14px;height:14px;"></i></button>
+    </div></td></tr>`;
+  }).join('') || `<tr><td colspan="5"><div class="empty-state"><div class="empty-icon"><i data-lucide="users"></i></div><h4>No users found</h4></div></td></tr>`;
   if(window.lucide) lucide.createIcons();
 }
 document.getElementById('uSearch').addEventListener('input', e=>{st.search=e.target.value; render();});
 document.getElementById('uStatus').addEventListener('change', e=>{st.status=e.target.value; render();});
 document.getElementById('uRole').addEventListener('click', e=>{const p=e.target.closest('.pill'); if(!p) return; document.querySelectorAll('#uRole .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active'); st.role=p.getAttribute('data-r'); render();});
-window.FS_AFTER_MOUNT = render;
+window.FS_AFTER_MOUNT = loadAdminUsers;
 </script>
 </body>
 </html>

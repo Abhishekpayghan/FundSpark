@@ -18,12 +18,13 @@
         <div><h1>My Startups</h1><p class="text-muted">Manage all your campaigns in one place.</p></div>
         <a href="create-startup.html" class="btn btn-primary"><i data-lucide="plus"></i> Create Startup</a>
       </div>
-      <div class="pill-nav mb-24">
-        <span class="pill active">All (3)</span>
-        <span class="pill">Live (2)</span>
-        <span class="pill">Pending Approval (1)</span>
-        <span class="pill">Draft (0)</span>
-        <span class="pill">Closed (0)</span>
+      <div class="pill-nav mb-24" id="myStartupsFilterNav">
+        <span class="pill active" data-status="all">All (0)</span>
+        <span class="pill" data-status="live">Live (0)</span>
+        <span class="pill" data-status="pending">Pending Approval (0)</span>
+        <span class="pill" data-status="draft">Draft (0)</span>
+        <span class="pill" data-status="closed">Closed (0)</span>
+        <span class="pill" data-status="rejected">Rejected (0)</span>
       </div>
       <div class="grid-12" id="myStartupsGrid"></div>
     </div>
@@ -31,34 +32,161 @@
 </div>
 
 <script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
 <script src="../assets/js/components.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-FS_MOUNT.dashboard('founder','Unknown','UN');
-const mine = [FS_STARTUPS[0], FS_STARTUPS[4], {...FS_STARTUPS[7], name:"SoilSense Lite", logo:"SL", verified:false, status:"pending"}];
-document.getElementById('myStartupsGrid').innerHTML = mine.map((s,idx)=>{
-  const pct = fsPct(s.raised, s.goal);
-  const status = idx===2 ? {label:"Pending Approval", cls:"badge-warning"} : {label:"Live", cls:"badge-success"};
-  return `<div class="card startup-card hover-lift" style="grid-column:span 4;">
-    <div class="startup-cover" style="background:linear-gradient(135deg, ${s.color}, var(--secondary));">
-      <div class="startup-badges"><span class="badge ${status.cls}">${status.label}</span></div>
-      <div class="startup-logo">${s.logo}</div>
-    </div>
-    <div class="startup-body">
-      <span class="startup-cat">${s.category}</span>
-      <h4 class="startup-name">${s.name}</h4>
-      <div class="progress"><div class="progress-bar" style="width:${pct}%;"></div></div>
-      <div class="funding-row"><span><b>${fsCurrency(s.raised)}</b> raised</span><span class="text-muted">${pct}%</span></div>
-      <div class="startup-footer">
-        <span class="text-sm text-muted">${s.days} days left</span>
-        <div class="flex gap-8">
-          <a href="edit-startup.html?id=${s.id}" class="btn-icon" title="Edit"><i data-lucide="pencil" style="width:15px;height:15px;"></i></a>
-          <a href="analytics.html?id=${s.id}" class="btn-icon" title="Analytics"><i data-lucide="bar-chart-3" style="width:15px;height:15px;"></i></a>
-        </div>
+const FS_SESSION = fsInitDashboard('founder'); if(!FS_SESSION) throw new Error('redirecting to login');
+
+const FS_CATEGORY_COLORS_LOCAL = {"Artificial Intelligence":"#2563EB","Healthcare":"#EF4444","Agriculture":"#22C55E","Education":"#7C3AED","FinTech":"#2563EB","Robotics":"#F59E0B","Food":"#F59E0B","Travel":"#0EA5E9","Gaming":"#F59E0B","Cybersecurity":"#0EA5E9","E-commerce":"#EF4444","Renewable Energy":"#22C55E","IoT":"#2563EB","SaaS":"#2563EB","Blockchain":"#7C3AED","Social Impact":"#22C55E"};
+
+const MY_STARTUPS_STATE = { status: 'all', rows: [] };
+
+
+
+function startupStatusLabel(status){
+  switch((status||'').toLowerCase()){
+    case 'pending': return 'pending';
+    case 'draft': return 'draft';
+    case 'closed': return 'closed';
+    case 'rejected': return 'rejected';
+    default: return 'live';
+  }
+}
+
+function filterMyStartups(rows){
+  if(MY_STARTUPS_STATE.status==='all') return rows;
+  return rows.filter(s => startupStatusLabel(s.status) === MY_STARTUPS_STATE.status);
+}
+
+function updateMyStartupsCounts(rows){
+  const counts = { all: rows.length, live: 0, pending: 0, draft: 0, closed: 0, rejected: 0 };
+  rows.forEach(s => {
+    const key = startupStatusLabel(s.status);
+    if(counts[key] != null) counts[key]++;
+  });
+  document.querySelectorAll('#myStartupsFilterNav .pill').forEach(p=>{
+    const status = p.getAttribute('data-status');
+    p.textContent = `${p.textContent.replace(/\(.+\)/,'').trim()} (${counts[status]||0})`;
+  });
+}
+
+function renderMyStartups(list){
+  const rows = [...list];
+  const statusBadgeMap = {
+    live:      {label:"Live",             cls:"badge-success"},
+    pending:   {label:"Pending Approval", cls:"badge-warning"},
+    closed:    {label:"Closed",           cls:"badge-secondary"},
+    rejected:  {label:"Rejected",         cls:"badge-danger"},
+    draft:     {label:"Draft",            cls:"badge-secondary"}
+  };
+  document.getElementById('myStartupsGrid').innerHTML = rows.map(s=>{
+    const pct = fsPct(s.raised, s.goal);
+    const status = statusBadgeMap[(s.status||'').toLowerCase()] || statusBadgeMap.live;
+    const isClosedOrRejected = s.status === 'closed' || s.status === 'rejected';
+    const color = FS_CATEGORY_COLORS_LOCAL[s.category] || "#2563EB";
+    const logo = (s.name||'??').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    return `<div class="card startup-card hover-lift" style="grid-column:span 4;${isClosedOrRejected?'opacity:.7;':''}">
+      <div class="startup-cover" style="background:linear-gradient(135deg, ${color}, var(--secondary));">
+        <div class="startup-badges"><span class="badge ${status.cls}">${status.label}</span></div>
+        <div class="startup-logo">${logo}</div>
       </div>
-    </div></div>`;
-}).join('');
-window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); };
+      <div class="startup-body">
+        <span class="startup-cat">${s.category}</span>
+        <h4 class="startup-name">${s.name}</h4>
+        <div class="progress"><div class="progress-bar" style="width:${pct}%;" data-target="${pct}"></div></div>
+        <div class="funding-row"><span><b>${fsCurrency(s.raised)}</b> raised</span><span class="text-muted">${pct}%</span></div>
+        <div class="startup-footer">
+          <span class="text-sm text-muted">${isClosedOrRejected ? status.label : (s.days ?? 0) + ' days left'}</span>
+          <div class="flex gap-8">
+            <a href="edit-startup.html?id=${s.id}" class="btn-icon" title="View / Edit"><i data-lucide="pencil" style="width:15px;height:15px;"></i></a>
+            <a href="analytics.html?id=${s.id}" class="btn-icon" title="Analytics"><i data-lucide="bar-chart-3" style="width:15px;height:15px;"></i></a>
+          </div>
+        </div>
+      </div></div>`;
+  }).join('') || `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon"><i data-lucide="rocket"></i></div><h4>No startups yet</h4><p>Create your first campaign to see it here.</p><a href="create-startup.html" class="btn btn-primary btn-sm">Create Startup</a></div>`;
+  if(window.lucide) lucide.createIcons();
+  fsAnimateProgressBars(document.getElementById('myStartupsGrid'));
+}
+
+function renderFilteredStartups(){
+  updateMyStartupsCounts(MY_STARTUPS_STATE.rows);
+  renderMyStartups(filterMyStartups(MY_STARTUPS_STATE.rows));
+}
+
+function getLoggedFounderId(){
+  return Number(FS_SESSION.userId || FS_SESSION.id || FS_SESSION.user_id);
+}
+
+function mapRawStartupForMyStartups(s){
+  const category = FS_CATEGORIES.find(c => Number(c.id) === Number(s.categoryId));
+  return {
+    id: s.startupId,
+    name: s.name,
+    category: category ? category.name : 'Uncategorized',
+    tagline: s.tagline,
+    goal: Number(s.fundingGoal || 0),
+    raised: Number(s.amountRaised || 0),
+    status: s.status || 'pending',
+    verified: !!s.isVerified,
+    days: s.deadline ? Math.max(0, Math.ceil((new Date(s.deadline) - new Date()) / 86400000)) : 0
+  };
+}
+
+async function loadMyStartups(){
+  const founderId = getLoggedFounderId();
+  if(!founderId){
+    document.getElementById('myStartupsGrid').innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon"><i data-lucide="alert-circle"></i></div><h4>Please log in again</h4><p>Your founder id was not found in the current session.</p><a href="../login.html" class="btn btn-primary btn-sm">Log In</a></div>`;
+    if(window.lucide) lucide.createIcons();
+    return;
+  }
+
+  try{
+    const res = await fetch(`${FS_API_BASE}/startups/founder/${founderId}/feed`);
+    if(!res.ok) throw new Error('bad response');
+    const rows = await res.json();
+    if(rows.length){
+      MY_STARTUPS_STATE.rows = rows;
+    }else{
+      const all = await fsApiGetAllStartups();
+      MY_STARTUPS_STATE.rows = Array.isArray(all)
+        ? all.filter(s => Number(s.founderId) === founderId).map(mapRawStartupForMyStartups)
+        : rows;
+    }
+    renderFilteredStartups();
+    if(MY_STARTUPS_STATE.rows.length) fsToast('Loaded your startups from the database.','success');
+  }catch(err){
+    console.warn('Founder feed failed, trying raw startup list.', err);
+    try{
+      const all = await fsApiGetAllStartups();
+      if(!Array.isArray(all)) throw new Error('raw startup list unavailable');
+      MY_STARTUPS_STATE.rows = all
+        .filter(s => Number(s.founderId) === founderId)
+        .map(mapRawStartupForMyStartups);
+      renderFilteredStartups();
+    }catch(rawErr){
+      console.warn('Could not load founder startups from backend.', rawErr);
+      document.getElementById('myStartupsGrid').innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon"><i data-lucide="wifi-off"></i></div><h4>Backend not reachable</h4><p>Start the Spring Boot backend on localhost:8080, then refresh this page.</p></div>`;
+      if(window.lucide) lucide.createIcons();
+    }
+  }
+}
+
+function initializeMyStartupsFilters(){
+  const nav = document.getElementById('myStartupsFilterNav');
+  if(!nav) return;
+  nav.addEventListener('click', e => {
+    const pill = e.target.closest('.pill');
+    if(!pill) return;
+    nav.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));
+    pill.classList.add('active');
+    MY_STARTUPS_STATE.status = pill.getAttribute('data-status');
+    renderFilteredStartups();
+  });
+}
+
+window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); initializeMyStartupsFilters(); loadMyStartups(); };
 </script>
 </body>
 </html>

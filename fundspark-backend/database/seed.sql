@@ -37,7 +37,7 @@ INSERT INTO users (full_name, email, password_hash, phone, role, location, avata
 
 -- ---------- Startups ----------
 INSERT INTO startups (founder_id, category_id, name, tagline, description, funding_goal, amount_raised, deadline, location, startup_score, is_verified, is_trending, status) VALUES
-(1, 3, 'AgroSense',   'IoT soil sensors that help small farmers cut water use by 40%.',       'Full description of AgroSense goes here.', 2500000, 1875000, '2026-09-15', 'Pune, MH',      92, TRUE,  TRUE,  'live'),
+(1, 3, 'AgroTech',   'IoT soil sensors that help small farmers cut water use by 40%.',       'Full description of AgroSense goes here.', 2500000, 1875000, '2026-09-15', 'Pune, MH',      92, TRUE,  TRUE,  'live'),
 (2, 2, 'MediTrack AI','AI-assisted diagnostics for rural clinics without a radiologist.',      'Full description of MediTrack AI goes here.', 5000000, 3120000, '2026-09-25', 'Bengaluru, KA', 88, TRUE,  TRUE,  'live'),
 (3, 5, 'PayNest',     'Micro-lending rails for gig workers, underwritten with UPI history.',   'Full description of PayNest goes here.', 8000000, 7120000, '2026-08-11', 'Mumbai, MH',    95, TRUE,  TRUE,  'live'),
 (1, 4, 'ClassBridge', 'Offline-first learning app for tier-3 schools with patchy internet.',   'Full description of ClassBridge goes here.', 1800000, 940000,  '2026-10-01', 'Nagpur, MH',    81, FALSE, FALSE, 'pending');

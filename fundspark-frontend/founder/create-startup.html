@@ -16,43 +16,63 @@
     <div class="page-wrap" style="max-width:880px;">
       <div class="page-head"><div><h1>Create Startup</h1><p class="text-muted">Publish a new campaign for investors to discover.</p></div></div>
 
-      <div class="pill-nav mb-24">
-        <button type="button" class="pill active" data-target="basicsSection">1. Basics</button>
-        <button type="button" class="pill" data-target="mediaSection">2. Media</button>
-        <button type="button" class="pill" data-target="fundingSection">3. Funding</button>
-        <button type="button" class="pill" data-target="teamSection">4. Team</button>
+      <div class="pill-nav mb-24" id="createStartupStepNav">
+        <span class="pill active" data-target="section-basics">1. Basics</span>
+        <span class="pill" data-target="section-media">2. Media</span>
+        <span class="pill" data-target="section-funding">3. Funding</span>
+        <span class="pill" data-target="section-team">4. Team</span>
       </div>
 
-      <form onsubmit="event.preventDefault(); fsToast('Startup submitted for admin approval.','success'); setTimeout(()=>location.href='my-startups.html',900);">
-        <div id="basicsSection" class="card card-pad mb-24">
+      <form onsubmit="handleCreateStartup(event)">
+        <div class="card card-pad mb-24" id="section-basics">
           <h4>Basic Information</h4>
           <div class="form-row">
-            <div class="form-group"><label>Startup Name</label><input class="form-control" required placeholder="e.g. AgroSense"></div>
+            <div class="form-group"><label>Startup Name</label><input id="startupName" class="form-control" required placeholder="e.g. AgroSense"></div>
             <div class="form-group"><label>Category</label>
-              <select class="form-control" required><option value="">Select a category</option></select>
+              <select id="startupCategory" class="form-control" required><option value="">Select a category</option></select>
             </div>
           </div>
-          <div class="form-group"><label>One-line Tagline</label><input class="form-control" required placeholder="Describe your startup in one sentence"></div>
-          <div class="form-group"><label>Detailed Description</label><textarea class="form-control" rows="4" required placeholder="Explain your startup, the problem, and the solution"></textarea></div>
+          <div class="form-group"><label>One-line Tagline</label><input id="startupTagline" class="form-control" required placeholder="Describe your startup in one sentence"></div>
+          <div class="form-group"><label>Detailed Description</label><textarea id="startupDescription" class="form-control" rows="4" required placeholder="Explain your startup, the problem, and the solution"></textarea></div>
           <div class="form-row">
-            <div class="form-group"><label>Location</label><input class="form-control" placeholder="City, State"></div>
-            <div class="form-group"><label>Website (optional)</label><input class="form-control" placeholder="https://"></div>
+            <div class="form-group"><label>Location</label><input id="startupLocation" class="form-control" placeholder="City, State"></div>
+            <div class="form-group"><label>Website (optional)</label><input id="startupWebsite" class="form-control" placeholder="https://"></div>
           </div>
         </div>
 
-        <div id="mediaSection" class="card card-pad mb-24">
+        <div class="card card-pad mb-24" id="section-media">
           <h4>Media &amp; Documents</h4>
           <div class="form-group"><label>Startup Logo</label><div class="upload-box"><i data-lucide="image-up"></i><p class="mt-8" style="margin:8px 0 0;">Click or drag to upload logo (PNG/JPG, max 2MB)</p></div></div>
           <div class="form-group"><label>Cover / Gallery Images</label><div class="upload-box"><i data-lucide="images"></i><p class="mt-8" style="margin:8px 0 0;">Upload up to 6 images</p></div></div>
           <div class="form-group"><label>Pitch Video</label><div class="upload-box"><i data-lucide="video"></i><p class="mt-8" style="margin:8px 0 0;">Upload a pitch video (MP4, max 100MB)</p></div></div>
           <div class="form-group"><label>Business Plan (PDF)</label><div class="upload-box"><i data-lucide="file-text"></i><p class="mt-8" style="margin:8px 0 0;">Upload your business plan document</p></div></div>
+          <h4 class="mt-24">Verification Documents <span class="text-muted" style="font-weight:400;font-size:13px;">(Please upload only the genuine and valid documents available with you, such as Business Registration Certificate, GST Certificate, PAN Card, Trademark Certificate, Udyam Registration Certificate, Bank Proof, and other relevant business documents.)</span></h4>
+          <div id="docRows">
+            <div class="form-row mb-16 doc-row">
+              <input class="form-control doc-name" placeholder="Document name (e.g. GST Certificate)">
+              <input type="file" class="form-control doc-file" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('docRows').insertAdjacentHTML('beforeend','&lt;div class=\'form-row mb-16 doc-row\'&gt;&lt;input class=\'form-control doc-name\' placeholder=\'Document name (e.g. PAN Card)\'&gt;&lt;input type=\'file\' class=\'form-control doc-file\' accept=\'.pdf,.jpg,.jpeg,.png\'&gt;&lt;/div&gt;')"><i data-lucide="plus"></i> Add Document</button>
         </div>
 
-        <div id="fundingSection" class="card card-pad mb-24">
+        <div class="card card-pad mb-24" id="section-funding">
           <h4>Funding Details</h4>
           <div class="form-row">
-            <div class="form-group"><label>Funding Goal (₹)</label><input class="form-control" type="number" required placeholder="e.g. 2500000"></div>
-            <div class="form-group"><label>Campaign Deadline</label><input class="form-control" type="date" required></div>
+            <div class="form-group"><label>Funding Goal (₹)</label><input id="startupGoal" class="form-control" type="number" required placeholder="e.g. 2500000" oninput="updateValuationPreview()"></div>
+            <div class="form-group"><label>Campaign Deadline</label><input id="startupDeadline" class="form-control" type="date" required></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Equity to Offer Investors (%)</label>
+              <input id="startupEquityPct" class="form-control" type="number" min="0.1" max="100" step="0.1" value="10" required oninput="updateValuationPreview()">
+              <p class="text-sm text-muted" style="margin:6px 0 0;">What % of your company are you offering in exchange for this funding goal?</p>
+            </div>
+            <div class="form-group">
+              <label>Your Startup's Valuation</label>
+              <div class="form-control" style="background:var(--bg);display:flex;align-items:center;font-weight:700;" id="valuationPreview">—</div>
+              <p class="text-sm text-muted" style="margin:6px 0 0;">Calculated automatically as Funding Goal ÷ Equity %.</p>
+            </div>
           </div>
           <div class="form-group"><label>Funding Usage Breakdown</label>
             <div class="form-row">
@@ -66,7 +86,7 @@
           </div>
         </div>
 
-        <div id="teamSection" class="card card-pad mb-24">
+        <div class="card card-pad mb-24" id="section-team">
           <h4>Team Members</h4>
           <div id="teamRows">
             <div class="form-row mb-16"><input class="form-control" placeholder="Team member name"><input class="form-control" placeholder="Role"></div>
@@ -84,26 +104,124 @@
 </div>
 
 <script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
 <script src="../assets/js/components.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-FS_MOUNT.dashboard('founder','Unknown','UK');
+const FS_SESSION = fsInitDashboard('founder'); if(!FS_SESSION) throw new Error('redirecting to login');
 window.FS_AFTER_MOUNT = function(){
-  document.querySelector('select.form-control').innerHTML = '<option value="">Select a category</option>' + FS_CATEGORIES.map(c=>`<option>${c.name}</option>`).join('');
+  document.getElementById('startupCategory').innerHTML = '<option value="">Select a category</option>' + FS_CATEGORIES.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
   if(window.lucide) lucide.createIcons();
+  const nav = document.getElementById('createStartupStepNav');
+  if(nav){
+    nav.addEventListener('click', e=>{
+      const pill = e.target.closest('.pill');
+      if(!pill) return;
+      nav.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));
+      pill.classList.add('active');
+      const targetId = pill.getAttribute('data-target');
+      const target = document.getElementById(targetId);
+      if(target){
+        target.scrollIntoView({behavior:'smooth', block:'start'});
+      }
+    });
+  }
+  updateValuationPreview();
 };
 
-document.querySelectorAll('.pill-nav button.pill').forEach(button => {
-  button.addEventListener('click', () => {
-    document.querySelectorAll('.pill-nav button.pill').forEach(btn => btn.classList.remove('active'));
-    button.classList.add('active');
-    const targetId = button.dataset.target;
-    const target = document.getElementById(targetId);
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+// ==== NEW: Founder-friendly valuation — computed from Funding Goal ÷ Equity %,
+// instead of asking the founder to type an abstract "valuation" number directly. ====
+function updateValuationPreview(){
+  const goal = Number(document.getElementById('startupGoal').value);
+  const pct = Number(document.getElementById('startupEquityPct').value);
+  const preview = document.getElementById('valuationPreview');
+  if(!goal || !pct || pct <= 0){
+    preview.textContent = '—';
+    return;
+  }
+  const valuation = goal / (pct / 100);
+  preview.textContent = '₹' + valuation.toLocaleString('en-IN', {maximumFractionDigits:0});
+}
+// ==== END NEW ====
+
+let fsSubmittingStartup = false;
+
+async function handleCreateStartup(e){
+  e.preventDefault();
+  if(fsSubmittingStartup) return;   // already in-flight — ignore a second click
+
+  const submitBtn = e.target.querySelector('button[type=submit]');
+
+  const name = document.getElementById('startupName').value.trim();
+  const categoryId = Number(document.getElementById('startupCategory').value);
+  const tagline = document.getElementById('startupTagline').value.trim();
+  const description = document.getElementById('startupDescription').value.trim();
+  const location = document.getElementById('startupLocation').value.trim();
+  const goal = Number(document.getElementById('startupGoal').value);
+  const equityPct = Number(document.getElementById('startupEquityPct').value);
+  const deadline = document.getElementById('startupDeadline').value;
+
+  if(!name || !categoryId || !tagline || !description || !goal || !deadline){
+    fsToast('Please fill in all required fields.','error');
+    return;
+  }
+  if(!equityPct || equityPct <= 0 || equityPct > 100){
+    fsToast('Enter a valid equity percentage between 0.1 and 100.','error');
+    return;
+  }
+  const valuation = goal / (equityPct / 100);
+
+  fsSubmittingStartup = true;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i data-lucide="loader-circle"></i> Publishing...';
+  if(window.lucide) lucide.createIcons();
+
+  const category = FS_CATEGORIES.find(c=>c.id===categoryId);
+  if(!category){
+    fsToast('Please select a valid category.','error');
+    return;
+  }
+
+  const payload = {
+    founderId: FS_SESSION.userId,
+    categoryId,
+    name,
+    tagline,
+    description,
+    location,
+    fundingGoal: goal,
+    valuation,
+    deadline
+  };
+
+  const result = await fsApiCreateStartup(payload);
+
+  if(result.success){
+    // Startup created — now upload whichever verification documents the founder
+    // actually filled in (any row missing a name or a file is simply skipped).
+    const newStartupId = result.data.startupId;
+    const docRows = document.querySelectorAll('#docRows .doc-row');
+    for(const row of docRows){
+      const docName = row.querySelector('.doc-name').value.trim();
+      const docFile = row.querySelector('.doc-file').files[0];
+      if(docName && docFile){
+        const url = await fsApiUploadFile(docFile);
+        if(url) await fsApiAddStartupDocument(newStartupId, docName, url);
+      }
     }
-  });
-});
+    fsToast('Startup published — visible on the platform now, tagged Pending until an admin verifies it.','success');
+    setTimeout(()=>location.href='my-startups.html',900);
+  } else {
+    const message = result.data?.message || (result.status===0 ? 'Backend server is not reachable. Make sure it is running on localhost:8080.' : 'Failed to submit startup.');
+    fsToast(message,'error');
+    fsSubmittingStartup = false;
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i data-lucide="send"></i> Submit for Approval';
+    if(window.lucide) lucide.createIcons();
+  }
+}
+
 </script>
 </body>
 </html>

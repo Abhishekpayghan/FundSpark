@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,7 +16,7 @@
       <h2 style="color:#fff;font-size:30px;">Welcome back to FundSpark</h2>
       <p style="color:rgba(255,255,255,.85);">Track your campaigns, review new investment opportunities, and stay connected with your network.</p>
       <div class="flex items-center gap-12 mt-32">
-        <div class="avatar" style="background:#fff;color:var(--primary);">UK</div>
+        <div class="avatar" style="background:#fff;color:var(--primary);">RK</div>
         <div class="avatar" style="background:#fff;color:var(--primary);margin-left:-16px;">AM</div>
         <div class="avatar" style="background:#fff;color:var(--primary);margin-left:-16px;">SK</div>
         <span class="text-sm" style="color:rgba(255,255,255,.85);margin-left:8px;">Joined by 5,000+ founders &amp; investors</span>
@@ -28,20 +28,16 @@
       <h2>Log in to your account</h2>
       <p class="text-sm mb-24">New to FundSpark? <a href="register.html" style="color:var(--primary);font-weight:600;">Create an account</a></p>
 
-      <div class="pill-nav mb-24" id="roleTabs">
-        <span class="pill active" data-role="founder">Founder</span>
-        <span class="pill" data-role="investor">Investor</span>
-        <span class="pill" data-role="admin">Admin</span>
-      </div>
+      <p class="text-sm mb-24" style="margin-top:-16px;">Your account's role (founder / investor / admin) is detected automatically — no need to select it.</p>
 
       <form onsubmit="handleLogin(event)">
         <div class="form-group">
           <label>Email Address</label>
-          <div class="input-icon"><i data-lucide="mail" style="width:17px;height:17px;"></i><input class="form-control" type="email" required placeholder="you@example.com" value="demo@fundspark.io"></div>
+          <div class="input-icon"><i data-lucide="mail" style="width:17px;height:17px;"></i><input class="form-control" type="email" required placeholder="you@example.com"></div>
         </div>
         <div class="form-group">
           <label>Password</label>
-          <div class="input-icon"><i data-lucide="lock" style="width:17px;height:17px;"></i><input class="form-control" type="password" required placeholder="••••••••" value="demo1234"></div>
+          <div class="input-icon"><i data-lucide="lock" style="width:17px;height:17px;"></i><input class="form-control" type="password" required placeholder="••••••••"></div>
         </div>
         <div class="flex justify-between items-center mb-24">
           <label class="checkbox-row"><input type="checkbox" checked> Remember me</label>
@@ -61,19 +57,30 @@
 </div>
 
 <script src="assets/js/data.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/auth.js"></script>
 <script src="assets/js/components.js"></script>
 <script src="assets/js/main.js"></script>
 <script>
-let selectedRole = 'founder';
-document.getElementById('roleTabs').addEventListener('click', e=>{
-  const p = e.target.closest('.pill'); if(!p) return;
-  document.querySelectorAll('#roleTabs .pill').forEach(x=>x.classList.remove('active'));
-  p.classList.add('active'); selectedRole = p.getAttribute('data-role');
-});
-function handleLogin(e){
+async function handleLogin(e){
   e.preventDefault();
-  fsToast('Login successful. Redirecting to your dashboard...','success');
-  setTimeout(()=>{ location.href = selectedRole + '/dashboard.html'; }, 900);
+  const form = e.target;
+  const email = form.querySelector('input[type=email]').value;
+  const password = form.querySelector('input[type=password]').value;
+  const submitBtn = form.querySelector('button[type=submit]');
+  submitBtn.disabled = true; submitBtn.textContent = 'Logging in...';
+
+  const result = await fsApiLogin(email, password);
+
+  submitBtn.disabled = false; submitBtn.textContent = 'Log In';
+
+  if(result.success){
+    fsSaveSession(result.data);
+    fsToast(`Welcome back, ${result.data.fullName}!`,'success');
+    setTimeout(()=>{ location.href = result.data.role + '/dashboard.html'; }, 700);
+  }else{
+    fsToast(result.data.message || 'Login failed.','error');
+  }
 }
 </script>
 </body>

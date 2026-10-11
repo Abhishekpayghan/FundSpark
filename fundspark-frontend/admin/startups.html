@@ -34,13 +34,45 @@
 </div>
 
 <script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
 <script src="../assets/js/components.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-FS_MOUNT.dashboard('admin','Pratiksha','PH');
+const FS_SESSION = fsInitDashboard('admin'); if(!FS_SESSION) throw new Error('redirecting to login');
 let st = {search:"", verified:""};
+let adminStartups = [];
+
+function formatAdminStartup(s){
+  const category = s.category || s.categoryName || FS_CATEGORIES.find(c=>c.id === Number(s.categoryId))?.name || 'Unknown';
+  const color = FS_CATEGORY_COLORS[category] || '#2563EB';
+  return {
+    id: s.startupId || s.id,
+    name: s.name,
+    founder: s.founder || s.fullName || s.full_name || 'Unknown',
+    category,
+    goal: s.fundingGoal || s.goal || 0,
+    raised: s.amountRaised || s.raised || 0,
+    score: s.startupScore || s.score || 0,
+    verified: s.isVerified || s.verified || false,
+    status: s.status || 'pending',
+    color,
+    logo: s.name ? s.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase() : '??'
+  };
+}
+
+async function loadAdminStartups(){
+  const all = await fsApiGetAdminStartups();
+  if(all){
+    adminStartups = all.map(formatAdminStartup);
+    render();
+  } else {
+    adminStartups = FS_STARTUPS.map(formatAdminStartup);
+    render();
+  }
+}
 function render(){
-  let list = FS_STARTUPS.filter(s=>{
+  let list = adminStartups.filter(s=>{
     if(st.verified==='1' && !s.verified) return false;
     if(st.verified==='0' && s.verified) return false;
     if(st.search && !(s.name+s.founder).toLowerCase().includes(st.search.toLowerCase())) return false;
@@ -48,23 +80,52 @@ function render(){
   });
   document.getElementById('startupRows').innerHTML = list.map(s=>{
     const pct = fsPct(s.raised, s.goal);
+    const statusMap = { live:['Verified','badge-success'], pending:['Pending','badge-warning'], closed:['Closed','badge-secondary'], rejected:['Rejected','badge-danger'] };
+    const [statusLabel, statusCls] = statusMap[s.status] || (s.verified ? ['Verified','badge-success'] : ['Unverified','badge-warning']);
+    const isActive = s.status === 'live' || s.status === 'pending';
     return `<tr><td><div class="row-flex"><div class="startup-logo" style="position:static;width:36px;height:36px;border-radius:10px;font-size:12px;background:${s.color}22;color:${s.color};">${s.logo}</div>
       <div><b style="font-size:13.5px;display:block;">${s.name}</b><span class="text-sm text-muted">${s.founder}</span></div></div></td>
       <td>${s.category}</td>
       <td><b>${fsCurrency(s.raised)}</b> <span class="text-muted">/ ${fsCurrency(s.goal)}</span><div class="progress mt-8" style="width:110px;"><div class="progress-bar" style="width:${pct}%;"></div></div></td>
       <td><span class="badge badge-primary">${s.score}</span></td>
-      <td><span class="badge ${s.verified?'badge-success':'badge-warning'}">${s.verified?'Verified':'Unverified'}</span></td>
+      <td><span class="badge ${statusCls}">${statusLabel}</span></td>
       <td><div class="flex gap-8">
         <a href="../startup-details.html?id=${s.id}" class="btn-icon" title="View"><i data-lucide="eye" style="width:14px;height:14px;"></i></a>
-        ${!s.verified? `<button class="btn-icon" title="Verify" onclick="fsToast('${s.name} has been verified.','success')"><i data-lucide="badge-check" style="width:14px;height:14px;"></i></button>`:''}
-        <button class="btn-icon" title="Remove" onclick="fsToast('${s.name} flagged for removal.','error')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+        ${!s.verified && isActive ? `<button type="button" class="btn-icon" title="Verify" onclick="verifyStartup(${s.id}, ${s.id})"><i data-lucide="badge-check" style="width:14px;height:14px;"></i></button>`:''}
+        ${isActive ? `<button type="button" class="btn-icon" title="Remove from portal" onclick="removeStartup(${s.id})"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>` : ''}
       </div></td></tr>`;
   }).join('');
   if(window.lucide) lucide.createIcons();
 }
 document.getElementById('sSearch').addEventListener('input', e=>{st.search=e.target.value; render();});
 document.getElementById('sVerified').addEventListener('change', e=>{st.verified=e.target.value; render();});
-window.FS_AFTER_MOUNT = render;
+
+async function verifyStartup(startupId, rowId){
+  const ok = await fsApiVerifyStartup(startupId);
+  if(ok){
+    fsToast('Startup verified and published.','success');
+    const item = adminStartups.find(x=>x.id===startupId);
+    if(item){ item.verified = true; item.status = 'live'; }
+    render();
+  } else {
+    fsToast('Unable to verify startup.','error');
+  }
+}
+
+async function removeStartup(startupId){
+  const item = adminStartups.find(x=>x.id===startupId);
+  if(!confirm(`Remove "${item?.name||'this startup'}" from the portal? It will no longer be visible to anyone.`)) return;
+  const ok = await fsApiCloseStartup(startupId);
+  if(ok){
+    fsToast(`${item?.name||'Startup'} closed and removed from the public portal.`,'success');
+    if(item) item.status = 'closed';
+    render();
+  } else {
+    fsToast('Unable to remove startup — backend unreachable.','error');
+  }
+}
+
+window.FS_AFTER_MOUNT = loadAdminStartups;
 </script>
 </body>
 </html>

@@ -34,27 +34,73 @@
   <div class="modal">
     <button class="modal-close" onclick="fsCloseModal('addCatModal')"><i data-lucide="x"></i></button>
     <h3>Add Category</h3>
-    <form onsubmit="event.preventDefault(); fsCloseModal('addCatModal'); fsToast('Category added successfully.','success');">
-      <div class="form-group"><label>Category Name</label><input class="form-control" required placeholder="e.g. Space Tech"></div>
-      <div class="form-group"><label>Icon Keyword (Lucide)</label><input class="form-control" placeholder="e.g. rocket"></div>
+    <form id="addCatForm" onsubmit="submitAddCategory(event)">
+      <div class="form-group"><label>Category Name</label><input class="form-control" id="newCatName" required placeholder="e.g. Space Tech"></div>
+      <div class="form-group"><label>Icon Keyword (Lucide)</label><input class="form-control" id="newCatIcon" placeholder="e.g. rocket" value="folder"></div>
       <button class="btn btn-primary btn-block" type="submit">Add Category</button>
     </form>
   </div>
 </div>
 
 <script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
 <script src="../assets/js/components.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-FS_MOUNT.dashboard('admin','Pratiksha','PH');
-document.getElementById('catRows').innerHTML = FS_CATEGORIES.map(c=>`
-  <tr><td><div class="row-flex"><div class="category-icon" style="width:34px;height:34px;margin:0;"><i data-lucide="${c.icon}" style="width:16px;height:16px;"></i></div>${c.name}</div></td>
-  <td>${c.count}</td><td><span class="badge badge-success">Active</span></td>
-  <td><div class="flex gap-8">
-    <button class="btn-icon" title="Edit" onclick="fsToast('Editing ${c.name}.','info')"><i data-lucide="pencil" style="width:14px;height:14px;"></i></button>
-    <button class="btn-icon" title="Remove" onclick="fsToast('${c.name} removed.','error')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
-  </div></td></tr>`).join('');
-window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); };
+const FS_SESSION = fsInitDashboard('admin'); if(!FS_SESSION) throw new Error('redirecting to login');
+
+async function loadCategories(){
+  const stats = await fsApiGetCategoryStats();
+  const list = stats || [];
+  const tbody = document.getElementById('catRows');
+  if(!list.length){
+    tbody.innerHTML = `<tr><td colspan="4" class="text-muted" style="text-align:center;padding:18px;">No categories found in database.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(c => `
+    <tr>
+      <td><div class="row-flex"><div class="category-icon" style="width:34px;height:34px;margin:0;"><i data-lucide="${c.icon || 'folder'}" style="width:16px;height:16px;"></i></div>${c.name}</div></td>
+      <td><b>${c.count || 0}</b> <span class="text-sm text-muted">startups</span></td>
+      <td><span class="badge badge-success">Active</span></td>
+      <td><div class="flex gap-8">
+        <button class="btn-icon" title="Remove" onclick="deleteCat(${c.id}, '${c.name}')"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+      </div></td>
+    </tr>`).join('');
+  if(window.lucide) lucide.createIcons();
+}
+
+async function submitAddCategory(e){
+  e.preventDefault();
+  const name = document.getElementById('newCatName').value.trim();
+  const icon = document.getElementById('newCatIcon').value.trim() || 'folder';
+  if(!name) return;
+  const ok = await fsApiAddCategory({ name, icon });
+  if(ok){
+    fsCloseModal('addCatModal');
+    document.getElementById('addCatForm').reset();
+    fsToast(`Category "${name}" added successfully.`, 'success');
+    loadCategories();
+  } else {
+    fsToast('Could not add category to database.', 'error');
+  }
+}
+
+async function deleteCat(id, name){
+  if(!confirm(`Delete category "${name}"? Startups in this category may be affected.`)) return;
+  const ok = await fsApiDeleteCategory(id);
+  if(ok){
+    fsToast(`Category "${name}" deleted.`, 'success');
+    loadCategories();
+  } else {
+    fsToast('Could not delete category.', 'error');
+  }
+}
+
+window.FS_AFTER_MOUNT = function(){
+  if(window.lucide) lucide.createIcons();
+  loadCategories();
+};
 </script>
 </body>
 </html>

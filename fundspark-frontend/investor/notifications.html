@@ -20,7 +20,7 @@
     <div class="page-wrap">
       <div class="page-head">
         <div><h1>Notifications</h1><p class="text-muted">Updates on your investments and watchlist.</p></div>
-        <button class="btn btn-outline btn-sm" onclick="document.querySelectorAll('.notif-row').forEach(r=>r.classList.remove('unread'));fsToast('All notifications marked as read.','success')">Mark all as read</button>
+        <button class="btn btn-outline btn-sm" onclick="markAllRead()">Mark all as read</button>
       </div>
       <div class="card card-pad" id="notifList"></div>
     </div>
@@ -28,24 +28,58 @@
 </div>
 
 <script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
 <script src="../assets/js/components.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-FS_MOUNT.dashboard('Sanket Jadhav','SJ');
-const investorNotifs = [
-  {icon:"badge-check", color:"success", title:"Campaign verified", text:"NimbusStack, a startup on your wishlist, has been verified.", time:"20 min ago", unread:true},
-  {icon:"clock", color:"warning", title:"Deadline approaching", text:"PayNest's campaign closes in 6 days — you're on the wishlist.", time:"2 hr ago", unread:true},
-  {icon:"trending-up", color:"primary", title:"Milestone reached", text:"AgroSense crossed 75% of its funding goal.", time:"5 hr ago", unread:true},
-  {icon:"message-circle", color:"secondary", title:"Reply to your comment", text:"The founder of CredSecure replied to your question.", time:"1 day ago", unread:false},
-  {icon:"star", color:"warning", title:"New startup in FinTech", text:"A new verified campaign matches your interests.", time:"3 days ago", unread:false},
-];
+const FS_SESSION = fsInitDashboard('investor'); if(!FS_SESSION) throw new Error('redirecting to login');
 const colorMap = {success:'#22C55E', primary:'#2563EB', secondary:'#7C3AED', warning:'#F59E0B'};
-document.getElementById('notifList').innerHTML = investorNotifs.map(n=>`
-  <div class="notif-row ${n.unread?'unread':''}">
-    <div class="notif-icon" style="background:${colorMap[n.color]}22;color:${colorMap[n.color]};"><i data-lucide="${n.icon}" style="width:18px;height:18px;"></i></div>
-    <div style="flex:1;"><b style="font-size:14px;">${n.title}</b><p class="text-sm" style="margin:4px 0;">${n.text}</p><span class="text-sm text-muted">${n.time}</span></div>
-  </div>`).join('');
-window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); };
+
+function renderNotifs(notifs){
+  document.getElementById('notifList').innerHTML = notifs.length ? notifs.map(n=>`
+    <div class="notif-row ${n.unread?'unread':''}">
+      <div class="notif-icon" style="background:${colorMap[n.color]||'#2563EB'}22;color:${colorMap[n.color]||'#2563EB'};"><i data-lucide="${n.icon||'bell'}" style="width:18px;height:18px;"></i></div>
+      <div style="flex:1;"><b style="font-size:14px;">${n.title}</b><p class="text-sm" style="margin:4px 0;">${n.text}</p><span class="text-sm text-muted">${n.time}</span></div>
+    </div>`).join('')
+    : `<div class="empty-state"><div class="empty-icon"><i data-lucide="bell-off"></i></div><h4>No notifications yet</h4><p>You'll see updates here about your investments and wishlist startups.</p></div>`;
+  if(window.lucide) lucide.createIcons();
+}
+
+async function loadNotifications(){
+  try{
+    const res = await fetch(`${FS_API_BASE}/notifications/user/${FS_SESSION.userId}`);
+    if(!res.ok) throw new Error('bad response');
+    const rows = await res.json();
+    const notifs = rows.map(n => ({
+      title: n.title, text: n.message, icon: n.icon || 'bell',
+      color: {'trending-up':'success','badge-check':'success','message-circle':'primary','clock':'warning','star':'warning'}[n.icon] || 'primary',
+      time: n.createdAt ? new Date(n.createdAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'Recent',
+      unread: !n.isRead
+    }));
+    renderNotifs(notifs);
+    if(notifs.length) fsToast('Loaded your live notifications from the database.','success');
+  }catch(err){
+    console.warn('API unavailable, showing demo notifications instead.', err);
+    renderNotifs([
+      {icon:"badge-check", color:"success", title:"Campaign verified", text:"NimbusStack, a startup on your wishlist, has been verified.", time:"20 min ago", unread:true},
+      {icon:"clock", color:"warning", title:"Deadline approaching", text:"PayNest's campaign closes in 6 days — you're on the wishlist.", time:"2 hr ago", unread:true},
+      {icon:"trending-up", color:"primary", title:"Milestone reached", text:"AgroSense crossed 75% of its funding goal.", time:"5 hr ago", unread:true},
+    ]);
+  }
+}
+
+async function markAllRead(){
+  document.querySelectorAll('.notif-row').forEach(r=>r.classList.remove('unread'));
+  try{
+    const res = await fetch(`${FS_API_BASE}/notifications/user/${FS_SESSION.userId}/read-all`, { method:'PUT' });
+    fsToast(res.ok ? 'All notifications marked as read.' : 'Marked as read locally (backend offline).', res.ok ? 'success':'info');
+  }catch(err){
+    fsToast('Marked as read locally (backend offline).','info');
+  }
+}
+
+window.FS_AFTER_MOUNT = function(){ loadNotifications(); };
 </script>
 </body>
 </html>

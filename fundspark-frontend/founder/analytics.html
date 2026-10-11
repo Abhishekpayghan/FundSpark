@@ -6,6 +6,25 @@
 <link rel="stylesheet" href="../assets/css/style.css">
 <link rel="stylesheet" href="../assets/css/dashboard.css">
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<style>
+.timeline-item{display:flex;gap:14px;padding-bottom:20px;position:relative;}
+.timeline-item::before{content:'';position:absolute;left:9px;top:24px;bottom:0;width:2px;background:var(--border);}
+.timeline-item:last-child::before{display:none;}
+.timeline-dot{width:20px;height:20px;border-radius:50%;background:var(--gradient);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.timeline-dot::after{content:'';width:8px;height:8px;background:#fff;border-radius:50%;}
+
+.fs-tooltip-wrap{ position:relative; display:inline-flex; align-items:center; }
+.fs-tooltip-wrap .fs-tooltip-box{
+  display:none; position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
+  width:250px; background:#1F2937; color:#fff; font-size:12px; line-height:1.5; font-weight:400;
+  padding:12px 14px; border-radius:10px; box-shadow:var(--shadow); z-index:20; text-align:left;
+}
+.fs-tooltip-wrap .fs-tooltip-box::after{
+  content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%);
+  border:6px solid transparent; border-top-color:#1F2937;
+}
+.fs-tooltip-wrap:hover .fs-tooltip-box{ display:block; }
+</style>
 </head>
 <body data-active="analytics">
 <script>const FS_BASE = "../";</script>
@@ -14,15 +33,22 @@
   <div class="main-area">
     <div id="fs-topbar"></div>
     <div class="page-wrap">
-      <div class="page-head"><div><h1>Campaign Analytics</h1><p class="text-muted">Performance breakdown for AgroSense.</p></div>
-        <select class="form-control" style="max-width:170px;"><option>Last 30 days</option><option>Last 90 days</option><option>All time</option></select>
+      <div class="page-head">
+        <div>
+          <h1>Campaign Analytics</h1>
+          <p class="text-muted" id="analyticsSubtitle">Performance breakdown for your campaigns.</p>
+        </div>
+        <div class="flex gap-12" style="flex-wrap:wrap;">
+          <select class="form-control" id="campaignSelect" style="max-width:220px;" onchange="loadAnalytics()"></select>
+          <select class="form-control" style="max-width:150px;"><option>Last 30 days</option><option>Last 90 days</option><option>All time</option></select>
+        </div>
       </div>
 
       <div class="kpi-grid">
-        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="eye"></i></div><div class="kpi-value"><span data-count="12400">0</span></div><div class="kpi-label">Total Views</div></div>
-        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="mouse-pointer-click"></i></div><div class="kpi-value"><span data-count="8.4" data-decimals="1" data-suffix="%">0</span></div><div class="kpi-label">Conversion Rate</div></div>
-        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="indian-rupee"></i></div><div class="kpi-value">₹<span data-count="2.9" data-decimals="1" data-suffix="k">0</span></div><div class="kpi-label">Avg. Investment</div></div>
-        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="repeat"></i></div><div class="kpi-value"><span data-count="34" data-suffix="%">0</span></div><div class="kpi-label">Returning Visitors</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="rocket"></i></div><div class="kpi-value"><span id="kpiCampaigns">0</span></div><div class="kpi-label">Active Campaigns</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="indian-rupee"></i></div><div class="kpi-value">₹<span id="kpiTotalRaised">0</span></div><div class="kpi-label">Total Funding Raised</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="target"></i></div><div class="kpi-value">₹<span id="kpiTotalGoal">0</span></div><div class="kpi-label">Total Funding Goal</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="trending-up"></i></div><div class="kpi-value"><span id="kpiAvgFunded">0%</span></div><div class="kpi-label">Avg. Progress</div></div>
       </div>
 
       <div class="panel-grid">
@@ -37,23 +63,253 @@
           <div class="chart-canvas-wrap" style="height:230px;"><canvas id="demoChart"></canvas></div>
         </div>
       </div>
+
+      <!-- ==== NEW: Live Cap Table ==== -->
+      <div class="card mt-24" id="capTableEmptyMsg" style="display:none;">
+        <p class="text-muted" style="margin:0;"><i data-lucide="info" style="width:16px;height:16px;vertical-align:-3px;"></i> Select one specific campaign above (not "All Campaigns") to view its live cap table.</p>
+      </div>
+
+      <div class="panel-grid mt-24" id="capTableSection" style="display:none;">
+        <div class="card chart-card">
+          <div class="chart-head"><h4 style="margin:0;font-size:15px;">Live Cap Table</h4></div>
+          <div class="chart-canvas-wrap" style="height:260px;"><canvas id="capTableChart"></canvas></div>
+        </div>
+        <div class="card card-pad">
+          <h4 style="font-size:15px;">Ownership Breakdown</h4>
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead><tr><th>Holder</th><th>Type</th><th>Equity %</th></tr></thead>
+              <tbody id="capTableRows"></tbody>
+            </table>
+          </div>
+          <p class="text-muted mt-12" style="font-size:12px;" id="capTableTotal"></p>
+        </div>
+      </div>
+      <!-- ==== END NEW ==== -->
+
+      <!-- ==== NEW: Valuation History Timeline + Add Round form (Founder) ==== -->
+      <div class="card mt-24" id="valuationSection" style="display:none;">
+        <div class="row-flex" style="justify-content:space-between;flex-wrap:wrap;gap:12px;">
+          <h3 style="margin:0;"><i data-lucide="trending-up" style="vertical-align:-3px;"></i> Valuation Timeline</h3>
+          <div class="flex gap-8" style="flex-wrap:wrap;align-items:flex-end;">
+            <div>
+              <div class="flex items-center gap-4" style="margin-bottom:4px;">
+                <span class="text-sm text-muted">Round Name</span>
+                <span class="fs-tooltip-wrap">
+                  <i data-lucide="info" style="width:13px;height:13px;cursor:help;color:var(--text-muted);"></i>
+                  <span class="fs-tooltip-box">
+                    <b>Common round names, in order:</b><br>
+                    <b>Pre-Seed</b> — earliest funding, idea/prototype stage<br>
+                    <b>Seed</b> — first real investment, building the product<br>
+                    <b>Series A</b> — product is live, raising to scale<br>
+                    <b>Series B / C</b> — larger growth &amp; expansion rounds
+                  </span>
+                </span>
+              </div>
+              <input class="form-control" id="newRoundName" placeholder="e.g. Seed, Series A" style="max-width:160px;">
+            </div>
+            <div>
+              <div class="text-sm text-muted" style="margin-bottom:4px;">Amount to Raise</div>
+              <input class="form-control" id="newRoundRaiseAmount" type="number" placeholder="₹" style="max-width:160px;" oninput="updateRoundValuationPreview()">
+            </div>
+            <div>
+              <div class="text-sm text-muted" style="margin-bottom:4px;">Equity Offered</div>
+              <input class="form-control" id="newRoundEquityPct" type="number" min="0.1" max="100" step="0.1" placeholder="%" style="max-width:150px;" oninput="updateRoundValuationPreview()">
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="addValuationRound()"><i data-lucide="plus"></i> Add Round</button>
+          </div>
+        </div>
+        <label class="checkbox-row" style="margin-top:10px;font-size:13px;">
+          <input type="checkbox" id="newRoundAddToGoal" checked>
+          Also add this amount to my total Funding Goal (so the public progress bar reflects the larger raise)
+        </label>
+        <p class="text-sm text-muted" style="margin:8px 0 0;">This round's implied valuation: <b id="roundValuationPreview">—</b></p>
+        <div id="valuationTimelineList" class="mt-16"></div>
+      </div>
+      <!-- ==== END NEW ==== -->
+
     </div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
 <script src="../assets/js/components.js"></script>
 <script src="../assets/js/main.js"></script>
 <script src="../assets/js/charts.js"></script>
 <script>
-FS_MOUNT.dashboard('founder','Unknown','UK');
-window.FS_AFTER_MOUNT = function(){
+const FS_SESSION = fsInitDashboard('founder'); if(!FS_SESSION) throw new Error('redirecting to login');
+let founderCampaigns = [];
+
+async function initCampaignSelect(){
+  document.getElementById('analyticsSubtitle').textContent = `Performance breakdown for ${FS_SESSION.fullName}'s campaigns.`;
+  const select = document.getElementById('campaignSelect');
+
+  try {
+    const list = await fsApiGetFounderFeed(FS_SESSION.userId);
+    if(list && Array.isArray(list) && list.length > 0){
+      founderCampaigns = list;
+      let opts = `<option value="all">All Campaigns (${list.length})</option>`;
+      list.forEach(c => {
+        opts += `<option value="${c.id}">${c.name}</option>`;
+      });
+      select.innerHTML = opts;
+    } else {
+      select.innerHTML = `<option value="none">No campaigns found</option>`;
+    }
+  } catch(e) {
+    select.innerHTML = `<option value="all">All Campaigns</option>`;
+  }
+  loadAnalytics();
+}
+
+function loadAnalytics(){
+  const selectedId = document.getElementById('campaignSelect').value;
+  let activeList = founderCampaigns;
+  if(selectedId !== 'all' && selectedId !== 'none'){
+    activeList = founderCampaigns.filter(c => String(c.id) === String(selectedId));
+  }
+
+  let totalRaised = 0;
+  let totalGoal = 0;
+  let campaignCount = activeList.length;
+
+  activeList.forEach(c => {
+    totalRaised += Number(c.raised || 0);
+    totalGoal += Number(c.goal || 0);
+  });
+
+  const avgProgress = totalGoal > 0 ? Math.min(100, Math.round((totalRaised / totalGoal) * 100)) : 0;
+  const formattedRaised = (totalRaised >= 100000) ? (totalRaised / 100000).toFixed(1) + 'L' : totalRaised.toLocaleString();
+  const formattedGoal = (totalGoal >= 100000) ? (totalGoal / 100000).toFixed(1) + 'L' : totalGoal.toLocaleString();
+
+  document.getElementById('kpiCampaigns').textContent = campaignCount;
+  document.getElementById('kpiTotalRaised').textContent = formattedRaised;
+  document.getElementById('kpiTotalGoal').textContent = formattedGoal;
+  document.getElementById('kpiAvgFunded').textContent = avgProgress + '%';
+
+  // Render Charts with campaign metric proportions
+  const raisedInLakhs = Math.max(0.5, totalRaised / 100000);
+  const p1 = (raisedInLakhs * 0.1).toFixed(1);
+  const p2 = (raisedInLakhs * 0.3).toFixed(1);
+  const p3 = (raisedInLakhs * 0.5).toFixed(1);
+  const p4 = (raisedInLakhs * 0.7).toFixed(1);
+  const p5 = (raisedInLakhs * 0.85).toFixed(1);
+  const p6 = (raisedInLakhs * 1.0).toFixed(1);
+
   if(window.lucide) lucide.createIcons();
-  fsLineChart(document.getElementById('progChart'), ['W1','W2','W3','W4','W5','W6','W7'], [{label:'₹ Raised (L)', data:[1,3,5.5,8,11.5,15,18.7], color:'#2563EB'}]);
-  fsDoughnut(document.getElementById('trafficChart'), ['Direct','Social','Search','Referral'], [38,29,21,12], ['#2563EB','#7C3AED','#22C55E','#F59E0B']);
-  fsBarChart(document.getElementById('viewsChart'), ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], [420,510,380,610,740,890,650], '#2563EB');
-  fsDoughnut(document.getElementById('demoChart'), ['25-34','35-44','45-54','55+'], [44,31,17,8], ['#7C3AED','#2563EB','#22C55E','#F59E0B']);
+  fsLineChart(document.getElementById('progChart'), ['W1','W2','W3','W4','W5','W6'], [{label:'₹ Raised (L)', data:[p1,p2,p3,p4,p5,p6], color:'#2563EB'}]);
+  fsDoughnut(document.getElementById('trafficChart'), ['Direct','Social','Search','Referral'], [40,30,20,10], ['#2563EB','#7C3AED','#22C55E','#F59E0B']);
+  fsBarChart(document.getElementById('viewsChart'), ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], [320,410,280,510,640,790,550], '#2563EB');
+  fsDoughnut(document.getElementById('demoChart'), ['25-34','35-44','45-54','55+'], [45,30,15,10], ['#7C3AED','#2563EB','#22C55E','#F59E0B']);
+
+  // ==== NEW: Live Cap Table — only makes sense for ONE specific campaign ====
+  if(selectedId !== 'all' && selectedId !== 'none'){
+    loadCapTable(selectedId);
+    document.getElementById('valuationSection').style.display = '';
+    loadValuationTimeline(selectedId);
+  } else {
+    document.getElementById('capTableSection').style.display = 'none';
+    document.getElementById('capTableEmptyMsg').style.display = 'block';
+    document.getElementById('valuationSection').style.display = 'none';
+  }
+}
+
+// ==== NEW: Live Cap Table ====
+async function loadCapTable(startupId){
+  const rows = await fsApiGetCapTable(startupId);
+  const section = document.getElementById('capTableSection');
+  const emptyMsg = document.getElementById('capTableEmptyMsg');
+
+  if(!rows || !rows.length){
+    section.style.display = 'none';
+    emptyMsg.style.display = 'block';
+    emptyMsg.querySelector('p').textContent = 'No equity data yet for this campaign — the cap table will appear once it has received an investment.';
+    return;
+  }
+
+  emptyMsg.style.display = 'none';
+  section.style.display = '';
+
+  const palette = ['#7C3AED','#22C55E','#F59E0B','#EF4444','#0EA5E9','#EC4899'];
+  const labels = rows.map(r => r.holder_name + (r.holder_type === 'Founder' ? ' (You)' : ''));
+  const values = rows.map(r => Number(r.equity_percentage));
+  const colors = rows.map((r,i) => r.holder_type === 'Founder' ? '#2563EB' : palette[i % palette.length]);
+
+  fsDoughnut(document.getElementById('capTableChart'), labels, values, colors);
+
+  document.getElementById('capTableRows').innerHTML = rows.map(r =>
+    `<tr><td>${r.holder_name}</td><td><span class="badge ${r.holder_type==='Founder'?'badge-primary':'badge-success'}">${r.holder_type}</span></td><td><b>${Number(r.equity_percentage).toFixed(3)}%</b></td></tr>`
+  ).join('');
+
+  const total = values.reduce((a,b) => a + b, 0);
+  document.getElementById('capTableTotal').textContent = `Total equity distributed: ${total.toFixed(2)}%`;
+  if(window.lucide) lucide.createIcons();
+}
+// ==== END NEW ====
+
+// ==== NEW: Valuation History Timeline + Add Round ====
+let currentValuationStartupId = null;
+
+async function loadValuationTimeline(startupId){
+  currentValuationStartupId = startupId;
+  const rounds = await fsApiGetValuationTimeline(startupId);
+  const el = document.getElementById('valuationTimelineList');
+  if(!rounds || !rounds.length){
+    el.innerHTML = `<p class="text-sm text-muted">No valuation rounds recorded yet.</p>`;
+    return;
+  }
+  el.innerHTML = rounds.map(r => {
+    const date = new Date(r.changedAt).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+    return `<div class="timeline-item"><div class="timeline-dot"></div><div><b>${r.roundName}</b><div class="text-sm text-muted">${date} — ₹${Number(r.valuationAmount).toLocaleString('en-IN')}</div></div></div>`;
+  }).join('');
+  if(window.lucide) lucide.createIcons();
+}
+
+// Founder-friendly: instead of typing an abstract "valuation" number, the founder enters
+// how much they want to raise in this round and what % equity they're offering for it —
+// the valuation is calculated automatically (same approach as the Create Startup form).
+function updateRoundValuationPreview(){
+  const amount = Number(document.getElementById('newRoundRaiseAmount').value);
+  const pct = Number(document.getElementById('newRoundEquityPct').value);
+  const preview = document.getElementById('roundValuationPreview');
+  if(!amount || !pct || pct <= 0){ preview.textContent = '—'; return; }
+  const valuation = amount / (pct / 100);
+  preview.textContent = '₹' + valuation.toLocaleString('en-IN', {maximumFractionDigits:0});
+}
+
+async function addValuationRound(){
+  const nameInput = document.getElementById('newRoundName');
+  const amountInput = document.getElementById('newRoundRaiseAmount');
+  const pctInput = document.getElementById('newRoundEquityPct');
+  const roundName = nameInput.value.trim();
+  const amount = Number(amountInput.value);
+  const pct = Number(pctInput.value);
+
+  if(!currentValuationStartupId){ fsToast('Select a specific campaign first.','error'); return; }
+  if(!roundName){ fsToast('Enter a round name (e.g. Series A).','error'); return; }
+  if(!amount || amount <= 0){ fsToast('Enter a valid amount to raise.','error'); return; }
+  if(!pct || pct <= 0 || pct > 100){ fsToast('Enter a valid equity percentage between 0.1 and 100.','error'); return; }
+
+  const valuation = amount / (pct / 100);
+  const addToGoal = document.getElementById('newRoundAddToGoal').checked;
+  const ok = await fsApiAddValuationRound(currentValuationStartupId, roundName, valuation, amount, addToGoal);
+  if(ok){
+    fsToast(addToGoal ? 'New round added — Funding Goal updated too.' : 'New valuation round added.','success');
+    nameInput.value = ''; amountInput.value = ''; pctInput.value = '';
+    document.getElementById('roundValuationPreview').textContent = '—';
+    loadValuationTimeline(currentValuationStartupId);
+    if(addToGoal) initCampaignSelect(); // refresh KPI cards so the new (bigger) Funding Goal shows up
+  }else{
+    fsToast('Could not save — check the backend server is running.','error');
+  }
+}
+// ==== END NEW ====
+
+window.FS_AFTER_MOUNT = function(){
+  initCampaignSelect();
 };
 </script>
 </body>

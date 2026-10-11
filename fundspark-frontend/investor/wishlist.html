@@ -22,24 +22,59 @@
 </div>
 
 <script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
 <script src="../assets/js/components.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-FS_MOUNT.dashboard('investor','Sanket Jadhav','SJ');
-const wishItems = FS_STARTUPS.slice(0,6);
+const FS_SESSION = fsInitDashboard('investor'); if(!FS_SESSION) throw new Error('redirecting to login');
 function card(s){
   const pct = fsPct(s.raised, s.goal);
+  const safeName = (s.name || '').replace(/'/g, "\\'");
   return `<div class="card startup-card hover-lift" style="grid-column:span 4;">
     <div class="startup-cover" style="background:linear-gradient(135deg, ${s.color}, var(--secondary));">
-      <div class="startup-actions"><button class="icon-btn active" onclick="this.closest('.startup-card').remove(); fsToast('Removed from wishlist.','info');"><i data-lucide="heart" style="width:16px;height:16px;fill:currentColor;"></i></button></div>
+      <div class="startup-actions"><button class="icon-btn active" onclick="removeWishlistItem(this, ${s.id}, '${safeName}')"><i data-lucide="heart" style="width:16px;height:16px;fill:currentColor;"></i></button></div>
       <div class="startup-logo">${s.logo}</div>
     </div>
     <div class="startup-body"><span class="startup-cat">${s.category}</span><h4 class="startup-name">${s.name}</h4>
     <div class="progress"><div class="progress-bar" style="width:${pct}%;"></div></div>
     <div class="startup-footer"><span class="text-sm text-muted">${pct}% funded</span><a href="../startup-details.html?id=${s.id}" class="btn btn-outline btn-sm">View</a></div></div></div>`;
 }
-document.getElementById('wishGrid').innerHTML = wishItems.map(card).join('');
-window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); };
+function renderWishlist(items){
+  document.getElementById('wishGrid').innerHTML = items.map(card).join('');
+  document.getElementById('wishEmpty').style.display = items.length ? 'none' : 'block';
+  if(window.lucide) lucide.createIcons();
+}
+async function loadWishlist(){
+  try{
+    const wishlist = await fsApiGetWishlist(FS_SESSION.userId);
+    const startups = await fsApiGetStartups() || FS_STARTUPS;
+    if(!wishlist){ throw new Error('Wishlist API failed'); }
+    const items = wishlist.map(w=>startups.find(s=>s.id===w.startupId)).filter(Boolean);
+    renderWishlist(items);
+    if(items.length) fsToast('Loaded your wishlist from the backend.','success');
+    return;
+  }catch(err){
+    console.warn('Wishlist API unavailable, showing demo wishlist instead.', err);
+    renderWishlist(FS_STARTUPS.slice(0,6));
+  }
+}
+async function removeWishlistItem(btn, startupId, name){
+  try{
+    const result = await fsApiToggleWishlist(FS_SESSION.userId, startupId);
+    if(result && result.bookmarked===false){
+      btn.closest('.startup-card').remove();
+      if(!document.getElementById('wishGrid').children.length) document.getElementById('wishEmpty').style.display='block';
+      fsToast(`${name} removed from wishlist.`, 'info');
+    } else {
+      fsToast('Could not remove from wishlist.','error');
+    }
+  }catch(err){
+    console.warn('Unable to update wishlist on backend.', err);
+    fsToast('Unable to update wishlist on backend.','error');
+  }
+}
+window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); loadWishlist(); };
 </script>
 </body>
 </html>

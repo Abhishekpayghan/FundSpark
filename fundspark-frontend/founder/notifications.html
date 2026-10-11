@@ -28,17 +28,80 @@
 </div>
 
 <script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
 <script src="../assets/js/components.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-FS_MOUNT.dashboard('founder','Unknown','UK');
+const FS_SESSION = fsInitDashboard('founder'); if(!FS_SESSION) throw new Error('redirecting to login');
 const colorMap = {success:'#22C55E', primary:'#2563EB', secondary:'#7C3AED', warning:'#F59E0B'};
-document.getElementById('notifList').innerHTML = FS_NOTIFICATIONS.map(n=>`
-  <div class="notif-row ${n.unread?'unread':''}">
-    <div class="notif-icon" style="background:${colorMap[n.color]}22;color:${colorMap[n.color]};"><i data-lucide="${n.icon}" style="width:18px;height:18px;"></i></div>
-    <div style="flex:1;"><b style="font-size:14px;">${n.title}</b><p class="text-sm" style="margin:4px 0;">${n.text}</p><span class="text-sm text-muted">${n.time}</span></div>
-  </div>`).join('');
-window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); };
+
+async function loadNotificationsTimeline(){
+  const container = document.getElementById('notifList');
+  let notifs = [];
+
+  try {
+    const list = await fsApiGetNotifications(FS_SESSION.userId);
+    if(list && Array.isArray(list) && list.length > 0){
+      notifs = list.map(n => ({
+        title: n.title || 'Notification',
+        text: n.message || n.text || '',
+        time: n.createdAt ? new Date(n.createdAt).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : 'Recent',
+        icon: n.icon || 'bell',
+        color: n.type === 'investment' ? 'success' : 'primary',
+        unread: !n.isRead
+      }));
+    }
+  } catch(e) {}
+
+  if(notifs.length === 0){
+    // Build real activity timeline from founder's investments & startups
+    try {
+      const investments = await fsApiGetFounderInvestmentsFeed(FS_SESSION.userId);
+      if(investments && Array.isArray(investments)){
+        investments.forEach(inv => {
+          notifs.push({
+            title: `New Investment Received: ₹${Number(inv.amount).toLocaleString()}`,
+            text: `${inv.investorName || 'An investor'} backed ${inv.startupName || 'your campaign'}.`,
+            time: inv.investedAt ? new Date(inv.investedAt).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'}) : 'Recent',
+            icon: 'indian-rupee',
+            color: 'success',
+            unread: false
+          });
+        });
+      }
+      const campaigns = await fsApiGetFounderFeed(FS_SESSION.userId);
+      if(campaigns && Array.isArray(campaigns)){
+        campaigns.forEach(c => {
+          notifs.push({
+            title: `Campaign Active: ${c.name}`,
+            text: `Your startup campaign is live under category ${c.category || 'Startups'}.`,
+            time: 'Active',
+            icon: 'rocket',
+            color: 'primary',
+            unread: false
+          });
+        });
+      }
+    } catch(e) {}
+  }
+
+  if(notifs.length === 0){
+    notifs = FS_NOTIFICATIONS.map(n => ({ ...n, text: n.text || n.message }));
+  }
+
+  container.innerHTML = notifs.map(n => `
+    <div class="notif-row ${n.unread?'unread':''}">
+      <div class="notif-icon" style="background:${colorMap[n.color]||'#2563EB'}22;color:${colorMap[n.color]||'#2563EB'};"><i data-lucide="${n.icon||'bell'}" style="width:18px;height:18px;"></i></div>
+      <div style="flex:1;"><b style="font-size:14px;">${n.title}</b><p class="text-sm" style="margin:4px 0;">${n.text}</p><span class="text-sm text-muted">${n.time}</span></div>
+    </div>`).join('');
+
+  if(window.lucide) lucide.createIcons();
+}
+
+window.FS_AFTER_MOUNT = function(){
+  loadNotificationsTimeline();
+};
 </script>
 </body>
 </html>

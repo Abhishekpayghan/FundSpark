@@ -1,155 +1,65 @@
-<div align="center">
+# FundSpark — Crowdfunding & Startup Pitch Platform (Frontend)
 
-# ⚡ FundSpark
-### Crowdfunding & Startup Pitch Platform — Frontend
+A complete, production-quality **frontend prototype** for a DBMS mini-project: a crowdfunding
+platform connecting startup founders with investors. Built with **plain HTML, CSS, and
+JavaScript only** — no framework, no build step. All data is realistic dummy/mock data
+(see `assets/js/data.js`); there is no backend, authentication, or payment integration.
 
-A modern, responsive frontend prototype for a crowdfunding platform connecting startup founders with investors. Built with **pure HTML, CSS & JavaScript** — no frameworks, no build tools.
+Later, plug in **Java (Spring/Servlets) + MySQL** for the backend — the HTML forms, IDs, and
+data shapes here are designed to map cleanly onto typical DB tables (`startups`, `users`,
+`investments`, `comments`, `categories`, `notifications`, etc).
 
-<img src="https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white" />
-<img src="https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white" />
-<img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black" />
-<img src="https://img.shields.io/badge/Chart.js-FF6384?style=flat-square&logo=chartdotjs&logoColor=white" />
-<img src="https://img.shields.io/badge/status-frontend%20prototype-blue?style=flat-square" />
-
-
-</div>
-
----
-
-## 📖 About
-
-**FundSpark** connects startup founders with investors and supporters. Founders publish
-startup pitches with funding goals and campaign deadlines; investors browse, filter,
-comment, rate, bookmark, and invest in campaigns; admins verify startups and moderate
-the platform.
-
-> This is a **frontend-only academic build** (DBMS mini-project) — all data is realistic
-> dummy/mock data with no real backend, authentication, or payment processing. It's
-> designed to plug into a **Java + MySQL** backend next.
-
----
-
-## ✨ Features
-
-- 🎨 Consistent design system — blue → purple gradient, rounded cards, soft shadows, dark mode
-- 🔍 Explore page with live search, category/goal/location filters, sorting & pagination
-- 📊 Founder, Investor, and Admin dashboards with charts (funding growth, category split, user growth)
-- 💬 Startup details page with tabs (Overview, Problem, Solution, Business Model, Team, Timeline, Media, Comments)
-- ⭐ Ratings, comments, bookmarking/wishlist, invest & "I'm interested" flows (simulated)
-- ✅ Admin campaign approval queue, user management, reports/moderation
-- 🌗 Persistent dark mode toggle
-- 📱 Fully responsive — desktop, laptop, tablet, mobile
-- 🧩 Reusable component system (navbar, sidebar, footer injected via JS — no duplication)
-
----
-
-## 🗂️ Project Structure
-
+## How to run
+No build tools needed. Just open `index.html` in a browser, or serve the folder with any
+static server, e.g.:
 ```
-fundspark/
-├── index.html                  Landing page
-├── explore.html                 Search & filter startups
-├── startup-details.html         Full campaign profile
-├── categories.html
-├── about.html · contact.html · faq.html
-├── login.html · register.html · forgot-password.html
-├── 404.html
-│
-├── founder/                     Founder dashboard
-│   ├── dashboard.html · my-startups.html
-│   ├── create-startup.html · edit-startup.html
-│   ├── analytics.html · investors.html
-│   └── notifications.html · profile.html · settings.html
-│
-├── investor/                    Investor dashboard
-│   ├── dashboard.html · browse.html · wishlist.html
-│   ├── investments.html · messages.html
-│   └── notifications.html · profile.html · settings.html
-│
-├── admin/                       Admin dashboard
-│   ├── dashboard.html · users.html · startups.html
-│   ├── campaign-approval.html · reports.html
-│   └── analytics.html · categories.html · settings.html
-│
-└── assets/
-    ├── css/style.css            Design system (tokens, buttons, cards, forms, tables...)
-    ├── css/dashboard.css        Sidebar / topbar dashboard shell
-    └── js/
-        ├── data.js               Dummy startups, users, comments, notifications
-        ├── components.js         Injects navbar / footer / sidebar / topbar
-        ├── main.js                Dark mode, toasts, counters, tabs, modals, bookmarks
-        └── charts.js              Chart.js helper wrappers
-```
-
----
-
-## 🚀 Getting Started
-
-### Option 1 — VS Code + Live Server (recommended)
-1. Clone or download this repo
-2. Open the folder in VS Code
-3. Install the **Live Server** extension
-4. Right-click `index.html` → **Open with Live Server**
-
-### Option 2 — Node
-```bash
 npx serve .
 ```
+(Recommended over opening as a raw `file://` path in case your browser blocks fetch/module
+features — though this project avoids those, so plain double-click works too.)
 
-### Option 3 — Just open it
-Double-click `index.html`. (Some browsers restrict `file://` pages from loading fonts/CDN
-scripts — Live Server or `npx serve` is more reliable.)
+## Folder structure
+```
+fundspark/
+├── index.html                 Landing page
+├── explore.html                Explore / search / filter startups
+├── startup-details.html        Full startup profile (tabs, gallery, comments, invest widget)
+├── categories.html             All startup categories
+├── about.html / contact.html / faq.html
+├── login.html / register.html / forgot-password.html
+├── 404.html
+├── founder/                    Founder dashboard area
+│   ├── dashboard.html  my-startups.html  create-startup.html  edit-startup.html
+│   ├── analytics.html  investors.html  notifications.html  profile.html  settings.html
+├── investor/                   Investor dashboard area
+│   ├── dashboard.html  browse.html  wishlist.html  investments.html
+│   ├── messages.html  notifications.html  profile.html  settings.html
+├── admin/                      Admin dashboard area
+│   ├── dashboard.html  users.html  startups.html  campaign-approval.html
+│   ├── reports.html  analytics.html  categories.html  settings.html
+└── assets/
+    ├── css/style.css           Design system: tokens, buttons, cards, forms, tables, tabs...
+    ├── css/dashboard.css       Sidebar/topbar dashboard shell layout
+    └── js/
+        ├── data.js             Dummy startups, users, notifications, comments...
+        ├── components.js       Injects navbar / footer / sidebar / topbar into every page
+        ├── main.js              Dark mode, toasts, counters, tabs, accordion, modal, bookmarks
+        └── charts.js            Chart.js wrapper helpers styled to the FundSpark palette
+```
 
-> ⚠️ Don't move an HTML file out of its folder without its assets — dashboard pages use
-> `../assets/...` paths, so `assets/` must stay one level up from `founder/`, `investor/`,
-> and `admin/`.
+## Design system
+- **Colors:** Primary `#2563EB`, Secondary `#7C3AED`, Success `#22C55E`, Warning `#F59E0B`,
+  Danger `#EF4444`, Background `#F8FAFC`, on a blue→purple gradient.
+- **Type:** Poppins (headings) + Inter (body), loaded from Google Fonts.
+- **Icons:** Lucide (via CDN `<script>`), initialized on every page load.
+- **Charts:** Chart.js (via CDN), wrapped in `assets/js/charts.js` helpers.
+- Dark mode toggle persists via `localStorage`; every page respects it.
 
----
-
-## 🎨 Design Tokens
-
-| Token | Value |
-|---|---|
-| Primary | `#2563EB` |
-| Secondary | `#7C3AED` |
-| Success | `#22C55E` |
-| Warning | `#F59E0B` |
-| Danger | `#EF4444` |
-| Background | `#F8FAFC` |
-| Text | `#0F172A` |
-| Headings | Poppins |
-| Body | Inter |
-| Icons | Lucide |
-
----
-
-## 🛠️ Tech Stack
-
-- **HTML5 / CSS3 / Vanilla JavaScript** — no framework, no bundler
-- **[Chart.js](https://www.chartjs.org/)** — funding, growth & category charts (via CDN)
-- **[Lucide Icons](https://lucide.dev/)** — icon set (via CDN)
-- **Google Fonts** — Poppins & Inter
-
-Planned backend (not included here): **Java (Spring Boot / Servlets)** + **MySQL**.
-Each dummy record shape in `assets/js/data.js` (startups, users, comments, investors,
-notifications) maps cleanly to a MySQL table.
-
----
-
-## 🗺️ Roadmap
-
-- [ ] Connect forms to a real Java + MySQL backend
-- [ ] Real authentication (JWT / sessions)
-- [ ] File upload handling (logos, pitch videos, business plan PDFs)
-- [ ] Real-time notifications
-- [ ] Payment gateway integration
-
----
-
-
-
----
-
-<div align="center">
-Built as a DBMS mini-project — frontend prototype only, no real data or transactions.
-</div>
+## Notes for the backend phase
+- Each dummy record shape in `data.js` (startup, user, comment, investor, notification) maps
+  to a natural MySQL table.
+- Forms already have sensible `name`-able fields (amounts, dates, selects) ready to be wired
+  to real POST endpoints.
+- All "successful" actions (invest, comment, approve, register, login) currently just show a
+  toast notification and/or redirect — swap those handlers for real `fetch()` calls to your
+  Java backend when ready.

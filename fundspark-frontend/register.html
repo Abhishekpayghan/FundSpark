@@ -38,7 +38,7 @@
       <form onsubmit="handleRegister(event)">
         <div class="form-row">
           <div class="form-group"><label>Full Name</label><input class="form-control" required placeholder="Your full name"></div>
-          <div class="form-group"><label>Phone Number</label><input class="form-control" required placeholder="+91 90000 00000"></div>
+          <div class="form-group"><label>Phone Number</label><input class="form-control" required placeholder="10-digit mobile number" type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" title="Enter exactly 10 digits (numbers only)" oninput="this.value=this.value.replace(/\D/g,'').slice(0,10)"></div>
         </div>
         <div class="form-group"><label>Email Address</label><input class="form-control" type="email" required placeholder="you@example.com"></div>
         <div class="form-row">
@@ -53,6 +53,8 @@
 </div>
 
 <script src="assets/js/data.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/auth.js"></script>
 <script src="assets/js/components.js"></script>
 <script src="assets/js/main.js"></script>
 <script>
@@ -62,10 +64,41 @@ document.getElementById('regRoleTabs').addEventListener('click', e=>{
   document.querySelectorAll('#regRoleTabs .pill').forEach(x=>x.classList.remove('active'));
   p.classList.add('active'); regRole = p.getAttribute('data-role');
 });
-function handleRegister(e){
+
+async function handleRegister(e){
   e.preventDefault();
-  fsToast('Account created! Redirecting to your dashboard...','success');
-  setTimeout(()=>{ location.href = regRole + '/dashboard.html'; }, 900);
+  const form = e.target;
+  const inputs = form.querySelectorAll('input');
+  const fullName = inputs[0].value, phone = inputs[1].value, email = inputs[2].value;
+  const password = inputs[3].value, confirmPassword = inputs[4].value;
+
+  if(!/^[0-9]{10}$/.test(phone)){
+    fsToast('Mobile number must be exactly 10 digits (numbers only).','error');
+    return;
+  }
+  if(password !== confirmPassword){
+    fsToast('Passwords do not match.','error');
+    return;
+  }
+  if(password.length < 4){
+    fsToast('Password should be at least 4 characters.','error');
+    return;
+  }
+
+  const submitBtn = form.querySelector('button[type=submit]');
+  submitBtn.disabled = true; submitBtn.textContent = 'Creating account...';
+
+  const result = await fsApiRegister({ fullName, email, phone, passwordHash: password, role: regRole });
+
+  submitBtn.disabled = false; submitBtn.textContent = 'Create Account';
+
+  if(result.success){
+    fsSaveSession(result.data);
+    fsToast(`Account created! Welcome, ${result.data.fullName}.`,'success');
+    setTimeout(()=>{ location.href = regRole + '/dashboard.html'; }, 700);
+  }else{
+    fsToast(result.data.message || 'Registration failed.','error');
+  }
 }
 </script>
 </body>

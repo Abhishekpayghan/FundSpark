@@ -44,7 +44,7 @@
           </div>
         </div>
         <div class="flex gap-8">
-          <button class="btn-icon" onclick="fsToggleBookmark(this,'this startup')"><i data-lucide="heart"></i></button>
+          <button class="btn-icon" onclick="fsGuardedInvestorAction(()=>fsToggleBookmark(this,'this startup', s.id))"><i data-lucide="heart"></i></button>
           <button class="btn-icon" onclick="fsToast('Share link copied to clipboard.','info')"><i data-lucide="share-2"></i></button>
         </div>
       </div>
@@ -91,6 +91,11 @@
             <div class="team-grid mt-16" id="teamGrid"></div>
           </div>
           <div class="tab-panel" id="tab-timeline">
+            <h4>Valuation History</h4>
+            <div id="valuationTimelineList" class="mb-24">
+              <p class="text-sm text-muted">Loading valuation history...</p>
+            </div>
+            <h4>Campaign Milestones</h4>
             <h4>Campaign Timeline</h4>
             <div class="mt-16">
               <div class="timeline-item"><div class="timeline-dot"></div><div><b>Campaign launched</b><div class="text-sm text-muted">1 Jun 2026 — Initial pitch published and approved by admin.</div></div></div>
@@ -115,7 +120,7 @@
           </div>
           <div class="tab-panel" id="tab-comments">
             <div class="flex justify-between items-center mb-16"><h4 style="margin:0;">Comments &amp; Ratings</h4><span class="text-sm text-muted" id="commentCount">3 comments</span></div>
-            <form class="card card-pad mb-24" onsubmit="event.preventDefault(); addComment(this);">
+            <form class="card card-pad mb-24" onsubmit="event.preventDefault(); if(fsRequireLogin()) addComment(this);">
               <textarea class="form-control" placeholder="Share your thoughts or ask the founder a question..." required></textarea>
               <div class="flex justify-between items-center mt-16">
                 <div class="rating" id="starPicker" data-val="5">
@@ -129,7 +134,18 @@
         </div>
       </div>
 
-      <aside class="card card-pad invest-widget" style="position:sticky;top:96px;">
+      <aside style="position:sticky;top:96px;">
+        <!-- ==== NEW: Valuation & Equity card ==== -->
+        <div class="card card-pad mb-16" id="equityInfoCard" style="display:none;">
+          <h4 style="margin:0 0 12px;font-size:14.5px;"><i data-lucide="pie-chart" style="width:15px;height:15px;vertical-align:-2px;"></i> Valuation &amp; Equity</h4>
+          <div class="flex justify-between mb-8"><span class="text-sm text-muted">Current Valuation</span><b id="eqValuation" class="text-sm">—</b></div>
+          <div class="flex justify-between mb-8"><span class="text-sm text-muted">Founder Equity</span><b id="eqFounderEquity" class="text-sm">—</b></div>
+          <div class="flex justify-between mb-8"><span class="text-sm text-muted">Investors So Far</span><b id="eqInvestorCount" class="text-sm">—</b></div>
+          <hr style="border:none;border-top:1px solid var(--border);margin:12px 0;">
+          <p class="text-sm text-muted" style="margin:0;">Every <b>₹1,00,000</b> invested gets you approximately <b id="eqRatePerLakh">—</b> equity.</p>
+        </div>
+        <!-- ==== END NEW ==== -->
+      <div class="card card-pad invest-widget">
         <div class="funding-row" style="font-size:15px;"><span><b id="widgetRaised">—</b></span><span class="text-muted">of <span id="widgetGoal">—</span></span></div>
         <div class="progress mt-8"><div class="progress-bar" id="widgetBar" data-target="0"></div></div>
         <div class="grid-12 mt-16" style="gap:12px;">
@@ -137,14 +153,15 @@
           <div style="grid-column:span 4;text-align:center;border-left:1px solid var(--border);border-right:1px solid var(--border);"><b style="display:block;font-family:var(--font-head);font-size:17px;" id="widgetInvestors">0</b><span class="text-sm text-muted">Investors</span></div>
           <div style="grid-column:span 4;text-align:center;"><b style="display:block;font-family:var(--font-head);font-size:17px;" id="widgetDays">0</b><span class="text-sm text-muted">Days Left</span></div>
         </div>
-        <button class="btn btn-primary btn-block mt-24" onclick="fsOpenModal('investModal')"><i data-lucide="indian-rupee"></i> Invest Now</button>
-        <button class="btn btn-outline btn-block mt-8" onclick="fsToast('Interest sent to the founder.','success')"><i data-lucide="handshake"></i> I'm Interested</button>
-        <div class="flex gap-8 mt-8">
-          <button class="btn btn-ghost btn-block" onclick="fsToggleBookmark(this,'this startup')"><i data-lucide="heart"></i> Bookmark</button>
+        <div id="requestStatusBox" style="display:none;margin-top:20px;border-radius:10px;padding:10px 12px;font-size:13.5px;line-height:1.5;"></div>
+        <button class="btn btn-primary btn-block mt-24" onclick="fsGuardedInvestorAction(openInvestModal)"><i data-lucide="indian-rupee"></i> Invest Now</button>
+        <button class="btn btn-outline btn-block mt-8" id="requestBtn" onclick="fsGuardedInvestorAction(openRequestModal)"><i data-lucide="handshake"></i> I'm Interested</button>
+          <button class="btn btn-ghost btn-block" onclick="fsGuardedInvestorAction(()=>fsToggleBookmark(this,'this startup', s.id))"><i data-lucide="heart"></i> Bookmark</button>
           <button class="btn btn-ghost btn-block" onclick="fsToast('Share link copied.','info')"><i data-lucide="share-2"></i> Share</button>
         </div>
         <hr style="border:none;border-top:1px solid var(--border);margin:20px 0;">
-        <div class="flex items-center gap-12"><i data-lucide="shield-check" style="color:var(--success);"></i><span class="text-sm">Business plan &amp; team verified by admin</span></div>
+        <div class="flex items-center gap-12" id="trustLine"><i data-lucide="shield-check" style="color:var(--success);"></i><span class="text-sm">Business plan &amp; team verified by admin</span></div>
+      </div>
       </aside>
     </div>
 
@@ -159,27 +176,86 @@
   <div class="modal">
     <button class="modal-close" onclick="fsCloseModal('investModal')"><i data-lucide="x"></i></button>
     <h3>Invest in <span id="modalName">this startup</span></h3>
-    <form onsubmit="event.preventDefault(); fsCloseModal('investModal'); fsToast('Investment simulated successfully. Thank you!','success');">
-      <div class="form-group"><label>Investment Amount (₹)</label><input class="form-control" type="number" min="1000" step="1000" value="50000" required></div>
+    <form>
+      <div class="form-group"><label>Investment Amount (₹)</label><input class="form-control" type="number" min="1000" step="1000" value="50000" required oninput="updateEquityPreview(this.value)"></div>
+      <div class="text-sm" id="equityPreviewLine" style="background:var(--bg);border-radius:10px;padding:10px 12px;margin:-8px 0 16px;">Calculating your equity...</div>
       <div class="form-group"><label>Payment Method (simulated)</label>
         <select class="form-control"><option>UPI</option><option>Net Banking</option><option>Debit Card</option></select>
       </div>
       <label class="checkbox-row mb-16"><input type="checkbox" required> I agree to the investment terms &amp; risk disclosure.</label>
+      <div id="approvalNotice" style="display:none;border-radius:10px;padding:10px 12px;margin-bottom:16px;font-size:13.5px;line-height:1.5;background:#FFFBEB;color:#92400E;"></div>
       <button class="btn btn-primary btn-block" type="submit">Confirm Investment</button>
     </form>
   </div>
 </div>
 
+<div class="modal-overlay" id="requestModal">
+  <div class="modal" style="max-height:90vh;overflow-y:auto;">
+    <button class="modal-close" onclick="fsCloseModal('requestModal')"><i data-lucide="x"></i></button>
+    <h3>Request to invest in <span id="requestModalName">this startup</span></h3>
+    <p class="text-sm text-muted">The founder reviews your request first. You can invest only after it is approved. Your name and location are shared with the founder.</p>
+    <form id="requestForm" onsubmit="submitInvestRequest(event)">
+      <div class="form-group"><label>Investor Type</label>
+        <select class="form-control" name="investorType" required>
+          <option value="individual">Individual</option>
+          <option value="angel">Angel Investor</option>
+          <option value="firm">Firm / Fund</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Intended Investment Amount (₹)</label>
+        <input class="form-control" type="number" name="intendedAmount" min="1000" step="1000" value="50000" required>
+      </div>
+      <div class="form-group"><label>Purpose of Investment</label>
+        <textarea class="form-control" name="purpose" rows="2" minlength="10" maxlength="500" placeholder="Why do you want to invest in this startup?" required></textarea>
+      </div>
+      <div class="form-group"><label>Investment Experience (optional)</label>
+        <textarea class="form-control" name="experience" rows="2" maxlength="500" placeholder="Your previous investments, if any"></textarea>
+      </div>
+      <div class="form-group"><label>Message to Founder (optional)</label>
+        <textarea class="form-control" name="messageToFounder" rows="2" maxlength="500"></textarea>
+      </div>
+      <label class="checkbox-row mb-16"><input type="checkbox" required> I confirm that the information above is correct.</label>
+      <button class="btn btn-primary btn-block" type="submit">Send Request</button>
+    </form>
+  </div>
+</div>
 <div id="fs-footer"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script src="assets/js/data.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/auth.js"></script>
 <script src="assets/js/components.js"></script>
 <script src="assets/js/main.js"></script>
 <script src="assets/js/charts.js"></script>
 <script>
 const id = parseInt(new URLSearchParams(location.search).get('id')) || 1;
-const s = FS_STARTUPS.find(x=>x.id===id) || FS_STARTUPS[0];
+let s = FS_STARTUPS.find(x=>x.id===id) || FS_STARTUPS[0];   // dummy default, replaced below if live backend responds
+renderStartup();
+
+async function loadLiveStartup(){
+  const live = await fsApiGetStartup(id);
+  if(live){ s = live; renderStartup(); fsToast('Loaded live data from the FundSpark backend.','success'); trackRecentlyViewed(s); }
+  const liveComments = await fsApiGetComments(id);
+  if(liveComments){ FS_COMMENTS.length = 0; FS_COMMENTS.push(...liveComments); renderComments(); }
+}
+
+// Records this view so the Investor Dashboard's "Recently Viewed" section can show real
+// browsing history. Only tracked for logged-in INVESTOR accounts, since that's the only
+// dashboard that displays it — founders/admins intentionally don't get this (see their
+// dashboards, which link to campaign management instead, never to the investable page).
+function trackRecentlyViewed(startup){
+  const session = fsGetSession();
+  if(!session || session.role !== 'investor') return;
+  const key = 'fs_recently_viewed_' + session.userId;
+  let list = [];
+  try{ list = JSON.parse(localStorage.getItem(key) || '[]'); }catch(e){}
+  list = list.filter(item => item.id !== startup.id);
+  list.unshift({ id: startup.id, name: startup.name, category: startup.category, color: startup.color, logo: startup.logo, viewedAt: Date.now() });
+  localStorage.setItem(key, JSON.stringify(list.slice(0, 8)));
+}
+
+function renderStartup(){
 const pct = fsPct(s.raised, s.goal);
 
 document.getElementById('crumbName').textContent = s.name;
@@ -190,10 +266,37 @@ document.getElementById('detailName').textContent = s.name;
 document.getElementById('detailFounder').textContent = 'Founded by ' + (s.founder||'—');
 document.getElementById('detailCat').textContent = s.category;
 document.getElementById('detailLoc').textContent = s.location;
-document.getElementById('verifiedBadge').style.display = s.verified ? 'inline-flex':'none';
+document.getElementById('verifiedBadge').style.display = 'inline-flex';
+const badgeEl = document.getElementById('verifiedBadge');
+const trustEl = document.getElementById('trustLine');
+if(s.status === 'closed'){
+  badgeEl.className = 'badge badge-secondary';
+  badgeEl.innerHTML = '<i data-lucide="lock" style="width:12px;height:12px;"></i> Closed';
+  trustEl.innerHTML = '<i data-lucide="info" style="color:var(--text-muted);"></i><span class="text-sm">This campaign has been closed and is no longer accepting investment.</span>';
+}else if(s.status === 'rejected'){
+  badgeEl.className = 'badge badge-danger';
+  badgeEl.innerHTML = '<i data-lucide="x-circle" style="width:12px;height:12px;"></i> Rejected';
+  trustEl.innerHTML = '<i data-lucide="info" style="color:var(--danger);"></i><span class="text-sm">This campaign was rejected by admin review.</span>';
+}else if(s.verified){
+  badgeEl.className = 'badge badge-verified';
+  badgeEl.innerHTML = '<i data-lucide="badge-check" style="width:12px;height:12px;"></i> Verified';
+  trustEl.innerHTML = '<i data-lucide="shield-check" style="color:var(--success);"></i><span class="text-sm">Business plan &amp; team verified by admin</span>';
+}else{
+  badgeEl.className = 'badge badge-warning';
+  badgeEl.innerHTML = '<i data-lucide="clock" style="width:12px;height:12px;"></i> Pending Approval';
+  trustEl.innerHTML = '<i data-lucide="clock" style="color:var(--warning);"></i><span class="text-sm">Awaiting admin review — not yet verified</span>';
+}
+if(window.lucide) lucide.createIcons();
 document.getElementById('detailRating').innerHTML = '<i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i> ' + s.rating + ' <span class="text-muted">('+s.reviews+' reviews)</span>';
 document.getElementById('overviewText').textContent = s.tagline + ' ' + s.name + ' is building toward a full-scale rollout after strong early traction, and is raising this round to accelerate hiring, product development, and go-to-market across new regions.';
 document.getElementById('ovGoal').textContent = fsCurrency(s.goal);
+
+try {
+  let viewed = JSON.parse(localStorage.getItem('fs_recently_viewed') || '[]');
+  viewed = viewed.filter(v => v.id !== s.id);
+  viewed.unshift({ id: s.id, name: s.name, category: s.category, color: s.color || '#2563EB', logo: s.logo || 'FS', time: 'Just now' });
+  localStorage.setItem('fs_recently_viewed', JSON.stringify(viewed.slice(0, 10)));
+} catch(e) {}
 document.getElementById('ovDeadline').textContent = s.days + ' days left';
 document.getElementById('ovScore').textContent = s.score + '/100';
 document.getElementById('modalName').textContent = s.name;
@@ -208,6 +311,24 @@ document.getElementById('widgetDays').textContent = s.days;
 document.getElementById('teamGrid').innerHTML = FS_TEAM.map(m=>`
   <div class="card card-pad flex items-center gap-12"><div class="avatar">${m.init}</div><div><b style="font-size:14px;">${m.name}</b><div class="text-sm text-muted">${m.role}</div></div></div>`).join('');
 
+renderRelated();
+}  // end renderStartup()
+
+function renderRelated(){
+  document.getElementById('relatedGrid').innerHTML = FS_STARTUPS.filter(x=>x.category===s.category && x.id!==s.id).slice(0,3).concat(FS_STARTUPS.filter(x=>x.id!==s.id)).slice(0,3).map(r=>{
+    const p = fsPct(r.raised,r.goal);
+    return `<div class="card startup-card hover-lift" style="grid-column:span 4;">
+      <div class="startup-cover" style="background:linear-gradient(135deg, ${r.color}, var(--secondary));"><div class="startup-logo">${r.logo}</div></div>
+      <div class="startup-body">
+        <span class="startup-cat">${r.category}</span>
+        <h4 class="startup-name">${r.name}</h4>
+        <div class="progress"><div class="progress-bar" style="width:${p}%;"></div></div>
+        <div class="startup-footer"><span class="text-sm text-muted">${p}% funded</span><a href="startup-details.html?id=${r.id}" class="btn btn-outline btn-sm">View</a></div>
+      </div></div>`;
+  }).join('');
+  if(window.lucide) lucide.createIcons();
+}
+
 function renderComments(){
   document.getElementById('commentsList').innerHTML = FS_COMMENTS.map(c=>`
     <div class="flex gap-12 mb-24">
@@ -221,31 +342,295 @@ function renderComments(){
   document.getElementById('commentCount').textContent = FS_COMMENTS.length + ' comments';
   if(window.lucide) lucide.createIcons();
 }
-function addComment(form){
-  const text = form.querySelector('textarea').value;
-  FS_COMMENTS.unshift({name:"You", init:"YOU", time:"just now", text, likes:0});
-  form.reset();
-  renderComments();
-  fsToast('Your comment has been posted.','success');
+// Wraps an action so it only runs if the visitor is logged in — otherwise redirects to login.
+function fsGuardedAction(fn){
+  if(!fsRequireLogin()) return;
+  fn();
 }
 
-document.getElementById('relatedGrid').innerHTML = FS_STARTUPS.filter(x=>x.category===s.category && x.id!==s.id).slice(0,3).concat(FS_STARTUPS.filter(x=>x.id!==s.id)).slice(0,3).map(r=>{
-  const p = fsPct(r.raised,r.goal);
-  return `<div class="card startup-card hover-lift" style="grid-column:span 4;">
-    <div class="startup-cover" style="background:linear-gradient(135deg, ${r.color}, var(--secondary));"><div class="startup-logo">${r.logo}</div></div>
-    <div class="startup-body">
-      <span class="startup-cat">${r.category}</span>
-      <h4 class="startup-name">${r.name}</h4>
-      <div class="progress"><div class="progress-bar" style="width:${p}%;"></div></div>
-      <div class="startup-footer"><span class="text-sm text-muted">${p}% funded</span><a href="startup-details.html?id=${r.id}" class="btn btn-outline btn-sm">View</a></div>
-    </div></div>`;
-}).join('');
+// Wraps an INVESTING action (Invest Now, I'm Interested, Bookmark) so it only runs for
+// logged-in INVESTOR accounts. Founders and admins get a clear explanatory toast instead —
+// this blocks investing no matter how they navigated here (dashboard, explore, the logo, etc.)
+// since the check lives at the action itself, not at any particular link.
+function fsGuardedInvestorAction(fn){
+  if(!fsRequireInvestor()) return;
+  if(s.status === 'closed' || s.status === 'rejected'){
+    fsToast(`This campaign is ${s.status} and no longer accepting investment.`,'error');
+    return;
+  }
+  fn();
+}
+
+async function addComment(form){
+  const session = fsGetSession();
+  const text = form.querySelector('textarea').value;
+  FS_COMMENTS.unshift({name: session.fullName, init: (session.avatarInitials||'ME'), time:"just now", text, likes:0});
+  form.reset();
+  renderComments();
+  const saved = await fsApiPostComment(s.id, session.userId, text);
+  fsToast(saved ? 'Comment saved to the database.' : 'Comment posted (backend offline — not saved).', saved ? 'success':'info');
+}
+
+// Wire the Invest Now modal to actually POST to the backend
+// Wire the Invest Now modal to actually POST to the backend
+document.addEventListener('submit', async function(e){
+  if(!e.target.closest('#investModal')) return;
+  e.preventDefault();
+  const session = fsRequireInvestor();
+  if(!session) { fsCloseModal('investModal'); return; }
+
+  // Founder approval gate: always check the latest request status before investing
+  await loadRequestStatus();
+  if(!myRequest || myRequest.status !== 'accepted'){
+    showApprovalNotice();
+    return;
+  }
+
+  const form = e.target;
+  const amount = Number(form.querySelector('input[type=number]').value);
+  const method = form.querySelector('select').value.toLowerCase().replace(' ', '');
+  fsCloseModal('investModal');
+  const ok = await fsApiPostInvestment(session.userId, s.id, amount, method === 'upi' ? 'upi' : method.includes('net') ? 'netbanking' : 'card');
+  if(ok){
+    fsToast('Investment saved to the database. Thank you!','success');
+    loadLiveStartup(); // refresh raised amount from the DB
+    loadRequestStatus();
+  }else{
+    fsToast('Investment simulated (backend offline — not saved).','info');
+  }
+});
+
+// ==== NEW: Valuation & Equity card + live equity preview (Invest modal) ====
+
+// Called on every keystroke in the "Investment Amount" field of the Invest modal.
+function updateEquityPreview(amount){
+  const line = document.getElementById('equityPreviewLine');
+  const val = Number(amount);
+  if(!s.valuation || !val || val <= 0){
+    line.textContent = 'Enter an amount to see the equity you\'ll receive.';
+    return;
+  }
+  const pct = (val / s.valuation) * 100;
+  line.innerHTML = `You will receive approximately <b>${pct.toFixed(3)}% equity</b> (based on the current valuation of ${fsCurrency(s.valuation)}).`;
+}
+
+// Populates the "Valuation & Equity" card in the sidebar using the live startup record
+// (s.valuation / s.founderEquity, both returned directly by GET /api/startups/{id})
+// plus the cap table for a real investor headcount.
+async function loadEquityInfo(){
+  const card = document.getElementById('equityInfoCard');
+  if(!s.valuation){ card.style.display = 'none'; return; } // backend offline / dummy data — nothing real to show
+  card.style.display = '';
+
+  document.getElementById('eqValuation').textContent = fsCurrency(s.valuation);
+  document.getElementById('eqFounderEquity').textContent = (s.founderEquity != null ? Number(s.founderEquity).toFixed(2) : '100.00') + '%';
+
+  const ratePerLakh = (100000 / s.valuation) * 100;
+  document.getElementById('eqRatePerLakh').textContent = ratePerLakh.toFixed(3) + '%';
+
+  const capTable = await fsApiGetCapTable(id);
+  const investorCount = capTable ? capTable.filter(r => r.holder_type === 'Investor').length : 0;
+  document.getElementById('eqInvestorCount').textContent = investorCount;
+
+  if(window.lucide) lucide.createIcons();
+}
+// ==== END NEW ====
+
+// ==== NEW: Valuation History Timeline ====
+async function loadValuationTimeline(){
+  const rounds = await fsApiGetValuationTimeline(id);
+  const el = document.getElementById('valuationTimelineList');
+  if(!rounds || !rounds.length){
+    el.innerHTML = `<p class="text-sm text-muted">No valuation history recorded yet for this startup.</p>`;
+    return;
+  }
+  el.innerHTML = rounds.map(r => {
+    const date = new Date(r.changedAt).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+    return `<div class="timeline-item"><div class="timeline-dot"></div><div><b>${r.roundName}</b><div class="text-sm text-muted">${date} — Valued at ${fsCurrency(Number(r.valuationAmount))}</div></div></div>`;
+  }).join('');
+  if(window.lucide) lucide.createIcons();
+}
+// ==== END NEW ====
+// ==== Investor approval flow ====
+let myRequest = null; // latest request status of this investor for this startup
+
+function escHtml(t){
+  return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function hoursText(h){ return h + (h === 1 ? ' hour' : ' hours'); }
+
+async function loadRequestStatus(){
+  const session = fsGetSession();
+  if(!session || session.role !== 'investor'){ myRequest = null; renderRequestStatus(); return; }
+  try{
+    const res = await fetch(`${FS_API_BASE}/investment-requests/status?investorId=${session.userId}&startupId=${id}`);
+    myRequest = res.ok ? await res.json() : null;
+  }catch(err){
+    myRequest = null;
+  }
+  renderRequestStatus();
+}
+
+function setRequestButton(label, disabled, hidden){
+  const btn = document.getElementById('requestBtn');
+  btn.innerHTML = `<i data-lucide="handshake"></i> ${label}`;
+  btn.disabled = !!disabled;
+  btn.style.display = hidden ? 'none' : '';
+  if(window.lucide) lucide.createIcons();
+}
+
+function renderRequestStatus(){
+  const box = document.getElementById('requestStatusBox');
+  const colors = {
+    success: ['#ECFDF5', '#166534'],
+    danger:  ['#FEF2F2', '#991B1B'],
+    warning: ['#FFFBEB', '#92400E'],
+    info:    ['#EFF6FF', '#1E40AF']
+  };
+  if(!myRequest || myRequest.status === 'none'){
+    box.style.display = 'none';
+    setRequestButton("I'm Interested", false, false);
+    return;
+  }
+
+  let tone = 'info', html = '', label = "I'm Interested", disabled = false, hidden = false;
+  const st = myRequest.status;
+
+  if(st === 'pending'){
+    tone = 'warning';
+    if(myRequest.canRequest){
+      html = '<b>Request sent.</b> The founder has not responded yet. You can send a new request now.';
+      label = 'Send Request Again';
+    }else{
+      html = `<b>Request sent.</b> Waiting for the founder's response. If there is no reply, you can send a new request in ${hoursText(myRequest.hoursLeft)}.`;
+      label = 'Request Pending';
+      disabled = true;
+    }
+  }else if(st === 'accepted'){
+    tone = 'success';
+    html = '<b>Approved.</b> The founder approved your request. You can invest now.';
+    hidden = true;
+  }else if(st === 'rejected'){
+    tone = 'danger';
+    const reason = `<b>Reason:</b> ${escHtml(myRequest.rejectionReasonLabel)}` +
+                   (myRequest.rejectionMessage ? `<br>${escHtml(myRequest.rejectionMessage)}` : '');
+    if(myRequest.canRequest){
+      html = `<b>Request rejected.</b><br>${reason}<br>Fix the points above and send an updated request.`;
+      label = 'Send Updated Request';
+    }else{
+      html = `<b>Request rejected.</b><br>${reason}<br>You can send an updated request in ${hoursText(myRequest.hoursLeft)}.`;
+      label = 'Updated Request Locked';
+      disabled = true;
+    }
+  }else if(st === 'expired'){
+    html = 'Your previous request expired without a response. You can send a new one.';
+  }else if(st === 'used'){
+    html = 'Your earlier approval was used for an investment. Send a new request to invest again.';
+  }
+
+  box.style.display = 'block';
+  box.style.background = colors[tone][0];
+  box.style.color = colors[tone][1];
+  box.innerHTML = html;
+  setRequestButton(label, disabled, hidden);
+}
+
+function openInvestModal(){
+  document.getElementById('approvalNotice').style.display = 'none';
+  fsOpenModal('investModal');
+  updateEquityPreview(document.querySelector('#investModal input[type=number]').value);
+}
+
+function openRequestModal(){
+  if(myRequest && myRequest.status !== 'none' && !myRequest.canRequest){
+    fsToast('You cannot send a new request right now.','info');
+    return;
+  }
+  document.getElementById('requestModalName').textContent = s.name || 'this startup';
+  fsOpenModal('requestModal');
+}
+
+// Shown inside the Invest modal when "Confirm Investment" is clicked without founder approval
+function showApprovalNotice(){
+  const el = document.getElementById('approvalNotice');
+  let text = "Before you invest, you need the founder's approval. Send a request first and invest after the founder accepts it.";
+  let showAction = true;
+  let actionLabel = 'Request Founder Approval';
+
+  if(myRequest && myRequest.status === 'pending'){
+    if(myRequest.canRequest){
+      text = 'The founder has not responded to your request yet. You can send a new request.';
+      actionLabel = 'Send Request Again';
+    }else{
+      text = `Your request is waiting for the founder's approval. You can invest once it is accepted. If there is no reply, you can send a new request in ${hoursText(myRequest.hoursLeft)}.`;
+      showAction = false;
+    }
+  }else if(myRequest && myRequest.status === 'rejected'){
+    text = `Your last request was rejected: ${escHtml(myRequest.rejectionReasonLabel)}.`;
+    if(myRequest.canRequest){
+      text += ' Update your request and send it again.';
+      actionLabel = 'Send Updated Request';
+    }else{
+      text += ` You can send an updated request in ${hoursText(myRequest.hoursLeft)}.`;
+      showAction = false;
+    }
+  }
+
+  el.innerHTML = `<div>${text}</div>` + (showAction
+    ? `<button type="button" class="btn btn-outline mt-8" onclick="fsCloseModal('investModal'); openRequestModal();">${actionLabel}</button>`
+    : '');
+  el.style.display = 'block';
+}
+
+async function submitInvestRequest(e){
+  e.preventDefault();
+  const session = fsRequireInvestor();
+  if(!session) return;
+
+  const f = e.target;
+  const payload = {
+    investorId: session.userId,
+    startupId: id,
+    investorType: f.investorType.value,
+    intendedAmount: Number(f.intendedAmount.value),
+    purpose: f.purpose.value.trim(),
+    experience: f.experience.value.trim(),
+    messageToFounder: f.messageToFounder.value.trim()
+  };
+
+  const submitBtn = f.querySelector('button[type=submit]');
+  submitBtn.disabled = true;
+  try{
+    const res = await fetch(`${FS_API_BASE}/investment-requests`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json().catch(() => ({}));
+    if(res.ok){
+      fsCloseModal('requestModal');
+      f.reset();
+      fsToast('Request sent to the founder.','success');
+    }else{
+      fsToast(data.message || 'Could not send the request.','error');
+    }
+  }catch(err){
+    fsToast('Backend server is not reachable. Make sure it is running on localhost:8080.','error');
+  }
+  submitBtn.disabled = false;
+  await loadRequestStatus();
+}
+// ==== END investor approval flow ====
 
 window.FS_AFTER_MOUNT = function(){
   renderComments();
   fsAnimateProgressBars();
   new fsDoughnut(document.getElementById('usageChart'), ['Product Development','Marketing','Hiring','Operations'], [40,25,25,10], ['#2563EB','#7C3AED','#22C55E','#F59E0B']);
   if(window.lucide) lucide.createIcons();
+  loadLiveStartup().then(loadEquityInfo);
+  loadValuationTimeline();
+  loadRequestStatus();
 };
 </script>
 </body>

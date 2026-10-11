@@ -15,7 +15,7 @@
     <div id="fs-topbar"></div>
     <div class="page-wrap">
       <div class="page-head"><div><h1>Admin Overview</h1><p class="text-muted">Platform health at a glance.</p></div>
-        <a href="campaign-approval.html" class="btn btn-primary"><i data-lucide="badge-check"></i> Review Pending (3)</a>
+        <a href="campaign-approval.html" class="btn btn-primary" id="reviewPendingBtn"><i data-lucide="badge-check"></i> Review Pending (<span id="reviewPendingCount">0</span>)</a>
       </div>
 
       <div class="kpi-grid">
@@ -52,26 +52,125 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
 <script src="../assets/js/components.js"></script>
 <script src="../assets/js/main.js"></script>
 <script src="../assets/js/charts.js"></script>
 <script>
-FS_MOUNT.dashboard('admin','Pratiksha','PH');
+const FS_SESSION = fsInitDashboard('admin'); if(!FS_SESSION) throw new Error('redirecting to login');
 
-document.getElementById('latestUsers').innerHTML = FS_USERS.slice(0,5).map(u=>`
-  <tr><td><div class="row-flex"><div class="avatar">${u.init}</div>${u.name}</div></td>
-  <td><span class="badge ${u.role==='Founder'?'badge-primary':'badge-secondary'}">${u.role}</span></td><td>${u.joined}</td></tr>`).join('');
+async function loadLatestUsers(){
+  const el = document.getElementById('latestUsers');
+  try{
+    const users = await fsApiGetUsers();
+    if(!users || !users.length){ throw new Error('empty'); }
+    const sorted = [...users].sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
+    el.innerHTML = sorted.slice(0,5).map(u=>{
+      const init = u.avatarInitials || fsInitials(u.fullName);
+      const roleLabel = (u.role||'').charAt(0).toUpperCase() + (u.role||'').slice(1);
+      const joined = u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+      return `<tr><td><div class="row-flex"><div class="avatar">${init}</div>${u.fullName}</div></td>
+      <td><span class="badge ${u.role==='founder'?'badge-primary':'badge-secondary'}">${roleLabel}</span></td><td>${joined}</td></tr>`;
+    }).join('');
+  }catch(err){
+    console.warn('Could not load live users, showing demo data.', err);
+    el.innerHTML = FS_USERS.slice(0,5).map(u=>`
+      <tr><td><div class="row-flex"><div class="avatar">${u.init}</div>${u.name}</div></td>
+      <td><span class="badge ${u.role==='Founder'?'badge-primary':'badge-secondary'}">${u.role}</span></td><td>${u.joined}</td></tr>`).join('');
+  }
+}
 
-document.getElementById('pendingList').innerHTML = FS_PENDING_CAMPAIGNS.map(c=>`
-  <div class="flex justify-between items-center mb-16">
-    <div><b style="font-size:13.5px;">${c.name}</b><div class="text-sm text-muted">${c.founder} · ${c.category}</div></div>
-    <span class="badge badge-warning">Pending</span>
-  </div>`).join('');
+async function loadPendingCampaigns(){
+  const el = document.getElementById('pendingList');
+  try{
+    const pending = await fsApiGetPendingStartups();
+    if(!pending) throw new Error('unavailable');
+    if(!pending.length){
+      el.innerHTML = `<p class="text-sm text-muted">No campaigns waiting for review.</p>`;
+      return;
+    }
+    el.innerHTML = pending.map(c => `
+      <div class="flex justify-between items-center mb-16">
+        <div><b style="font-size:13.5px;">${c.name}</b><div class="text-sm text-muted">${c.founder} · ${c.category}</div></div>
+        <span class="badge badge-warning">Pending</span>
+      </div>`).join('');
+  }catch(err){
+    console.warn('Could not load live pending campaigns, showing demo data.', err);
+    el.innerHTML = FS_PENDING_CAMPAIGNS.map(c=>`
+      <div class="flex justify-between items-center mb-16">
+        <div><b style="font-size:13.5px;">${c.name}</b><div class="text-sm text-muted">${c.founder} · ${c.category}</div></div>
+        <span class="badge badge-warning">Pending</span>
+      </div>`).join('');
+  }
+}
+
+// Live platform-wide KPIs — real COUNT/SUM queries against the MySQL database
+async function loadLiveKpis(){
+  try{
+    const res = await fetch(`${FS_API_BASE}/dashboard/admin`);
+    if(!res.ok) throw new Error('bad response');
+    const kpi = await res.json();
+    const counts = document.querySelectorAll('[data-count]');
+    counts[0].setAttribute('data-count', kpi.totalUsers ?? 0);
+    counts[1].setAttribute('data-count', kpi.totalCampaigns ?? 0);
+    
+    const raised = Number(kpi.totalFundingRaised || 0);
+    if(raised >= 10000000){
+      counts[2].setAttribute('data-count', (raised / 10000000).toFixed(1));
+      counts[2].setAttribute('data-suffix', ' Cr');
+      counts[2].setAttribute('data-decimals', '1');
+    } else if(raised >= 100000){
+      counts[2].setAttribute('data-count', (raised / 100000).toFixed(1));
+      counts[2].setAttribute('data-suffix', ' L');
+      counts[2].setAttribute('data-decimals', '1');
+    } else {
+      counts[2].setAttribute('data-count', raised);
+      counts[2].setAttribute('data-suffix', '');
+      counts[2].setAttribute('data-decimals', '0');
+    }
+
+    counts[3].setAttribute('data-count', kpi.pendingApprovals ?? 0);
+    const reviewCountEl = document.getElementById('reviewPendingCount');
+    if(reviewCountEl) reviewCountEl.textContent = kpi.pendingApprovals ?? 0;
+    counts[4].setAttribute('data-count', kpi.totalFounders ?? 0);
+    counts[5].setAttribute('data-count', kpi.totalInvestors ?? 0);
+    counts[6].setAttribute('data-count', kpi.verifiedCampaigns ?? 0);
+    counts[7].setAttribute('data-count', kpi.flaggedCampaigns ?? 0);
+    fsAnimateCounters();
+  }catch(err){
+    console.warn('Dashboard API unavailable, showing demo numbers.', err);
+  }
+}
+
+async function loadLiveCharts(){
+  const analytics = await fsApiGetAdminAnalytics();
+  if(!analytics) return;
+
+  // 1. Funding Analytics Line Chart
+  if(analytics.monthlyFunding && analytics.monthlyFunding.length){
+    const labels = analytics.monthlyFunding.map(m => m.monthLabel);
+    const data = analytics.monthlyFunding.map(m => Number((Number(m.totalAmount)/100000).toFixed(2)));
+    fsLineChart(document.getElementById('fundAnalytics'), labels, [{label:'Funding (₹ Lakhs)', data, color:'#2563EB'}]);
+  } else {
+    fsLineChart(document.getElementById('fundAnalytics'), ['Current'], [{label:'Funding (₹ Lakhs)', data:[0], color:'#2563EB'}]);
+  }
+
+  // 2. Category Distribution Doughnut Chart
+  if(analytics.categoryDistribution && analytics.categoryDistribution.length){
+    const catLabels = analytics.categoryDistribution.map(c => c.category);
+    const catCounts = analytics.categoryDistribution.map(c => c.total);
+    const colors = ['#2563EB','#EF4444','#22C55E','#7C3AED','#F59E0B','#06B6D4','#EC4899','#8B5CF6'];
+    fsDoughnut(document.getElementById('catDist'), catLabels, catCounts, colors.slice(0, catLabels.length));
+  }
+}
 
 window.FS_AFTER_MOUNT = function(){
   if(window.lucide) lucide.createIcons();
-  fsLineChart(document.getElementById('fundAnalytics'), ['Feb','Mar','Apr','May','Jun','Jul'], [{label:'Funding (₹Cr)', data:[1.1,1.8,2.6,3.4,4.3,5.2], color:'#2563EB'}]);
-  fsDoughnut(document.getElementById('catDist'), ['FinTech','Healthcare','Agriculture','SaaS','Other'], [26,19,16,18,21], ['#2563EB','#EF4444','#22C55E','#7C3AED','#F59E0B']);
+  loadLiveKpis();
+  loadLiveCharts();
+  loadLatestUsers();
+  loadPendingCampaigns();
 };
 </script>
 </body>

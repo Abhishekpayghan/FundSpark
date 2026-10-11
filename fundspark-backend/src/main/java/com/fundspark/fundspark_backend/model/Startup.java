@@ -25,6 +25,14 @@ public class Startup {
     @Column(name = "founder_id", nullable = false)
     private Integer founderId;
 
+    // ---- NEW: equity feature fields ----
+    @Column(name = "founder_equity", precision = 5, scale = 2)
+    private BigDecimal founderEquity = BigDecimal.valueOf(100.00);
+
+    @Column(name = "valuation", precision = 16, scale = 2)
+    private BigDecimal valuation;
+    // -------------------------------------
+
     @Column(name = "category_id", nullable = false)
     private Integer categoryId;
 
@@ -86,6 +94,12 @@ public class Startup {
 
     public Integer getFounderId() { return founderId; }
     public void setFounderId(Integer founderId) { this.founderId = founderId; }
+
+    public BigDecimal getFounderEquity() { return founderEquity; }
+    public void setFounderEquity(BigDecimal founderEquity) { this.founderEquity = founderEquity; }
+
+    public BigDecimal getValuation() { return valuation; }
+    public void setValuation(BigDecimal valuation) { this.valuation = valuation; }
 
     public Integer getCategoryId() { return categoryId; }
     public void setCategoryId(Integer categoryId) { this.categoryId = categoryId; }

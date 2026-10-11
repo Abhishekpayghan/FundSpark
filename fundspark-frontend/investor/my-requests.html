@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Requests — FundSpark</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="my-requests">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head"><div><h1>My Requests</h1><p class="text-muted">Your investment requests to founders and their status.</p></div></div>
+
+      <div class="grid-12" style="gap:12px;margin-bottom:16px;">
+        <div class="card card-pad" style="grid-column:span 3;text-align:center;"><b id="reqTotal" style="display:block;font-size:22px;">0</b><span class="text-sm text-muted">Total Requests</span></div>
+        <div class="card card-pad" style="grid-column:span 3;text-align:center;"><b id="reqPending" style="display:block;font-size:22px;">0</b><span class="text-sm text-muted">Pending</span></div>
+        <div class="card card-pad" style="grid-column:span 3;text-align:center;"><b id="reqAccepted" style="display:block;font-size:22px;">0</b><span class="text-sm text-muted">Approved</span></div>
+        <div class="card card-pad" style="grid-column:span 3;text-align:center;"><b id="reqRejected" style="display:block;font-size:22px;">0</b><span class="text-sm text-muted">Rejected</span></div>
+      </div>
+
+      <div class="card">
+        <div style="padding:14px 16px;display:flex;align-items:center;gap:10px;">
+          <label class="text-sm text-muted" for="reqFilter">Show:</label>
+          <select id="reqFilter" class="form-control" style="max-width:200px;" onchange="renderRequests()">
+            <option value="all">All requests</option>
+            <option value="pending">Pending</option>
+            <option value="accepted">Approved</option>
+            <option value="rejected">Rejected</option>
+            <option value="used">Used (invested)</option>
+            <option value="expired">Expired</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Startup</th><th>Intended Amount</th><th>Sent</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="requestRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+const FS_SESSION = fsInitDashboard('investor'); if(!FS_SESSION) throw new Error('redirecting to login');
+
+const REQ_BASE = `${FS_API_BASE}/investment-requests`;
+let ALL_REQUESTS = [];
+let REASON_LABELS = {};
+let LATEST_BY_STARTUP = {};   // startupId -> id of the newest request for that startup
+
+const STATUS_LABELS = { pending:'Pending', accepted:'Approved', rejected:'Rejected', used:'Used', expired:'Expired' };
+const STATUS_BADGES = { pending:'badge-warning', accepted:'badge-success', rejected:'badge-danger', used:'badge-secondary', expired:'badge-secondary' };
+
+function esc(t){
+  return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function hoursLeft(canReapplyAt){
+  if(!canReapplyAt) return 0;
+  const ms = new Date(canReapplyAt).getTime() - Date.now();
+  return ms <= 0 ? 0 : Math.ceil(ms / 3600000);
+}
+
+async function loadRequests(){
+  try{
+    const reasons = await fetch(`${REQ_BASE}/reject-reasons`).then(r => r.json());
+    REASON_LABELS = {};
+    reasons.forEach(r => { REASON_LABELS[r.code] = r.label; });
+
+    const res = await fetch(`${REQ_BASE}/investor/${FS_SESSION.userId}`);
+    if(!res.ok) throw new Error('bad response');
+    ALL_REQUESTS = await res.json();
+  }catch(err){
+    console.warn('Could not load requests.', err);
+    ALL_REQUESTS = [];
+    fsToast('Could not load your requests. Is the backend running?','error');
+  }
+
+  // The list arrives newest first, so the first row per startup is its latest request
+  LATEST_BY_STARTUP = {};
+  ALL_REQUESTS.forEach(r => { if(!(r.startupId in LATEST_BY_STARTUP)) LATEST_BY_STARTUP[r.startupId] = r.id; });
+
+  renderRequests();
+}
+
+function actionCell(r){
+  const isLatest = LATEST_BY_STARTUP[r.startupId] === r.id;
+  if(!isLatest) return '<span class="text-sm text-muted">Older request</span>';
+
+  const link = `../startup-details.html?id=${r.startupId}`;
+  if(r.status === 'accepted'){
+    return `<a class="btn btn-primary btn-sm" href="${link}">Invest now</a>`;
+  }
+  if(r.status === 'pending' || r.status === 'rejected'){
+    const h = hoursLeft(r.canReapplyAt);
+    if(h > 0){
+      const label = r.status === 'pending' ? 'Can resend in' : 'Can update in';
+      return `<span class="text-sm text-muted">${label} ${h} ${h === 1 ? 'hour' : 'hours'}</span>`;
+    }
+    return `<a class="btn btn-outline btn-sm" href="${link}">Send new request</a>`;
+  }
+  // used or expired
+  return `<a class="btn btn-outline btn-sm" href="${link}">Send new request</a>`;
+}
+
+function renderRequests(){
+  const count = s => ALL_REQUESTS.filter(r => r.status === s).length;
+  document.getElementById('reqTotal').textContent = ALL_REQUESTS.length;
+  document.getElementById('reqPending').textContent = count('pending');
+  document.getElementById('reqAccepted').textContent = count('accepted');
+  document.getElementById('reqRejected').textContent = count('rejected');
+
+  const filter = document.getElementById('reqFilter').value;
+  const rows = filter === 'all' ? ALL_REQUESTS : ALL_REQUESTS.filter(r => r.status === filter);
+
+  document.getElementById('requestRows').innerHTML = rows.map(r => {
+    const logo = (r.startupName || '??').split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+    const sent = new Date(r.createdAt).toLocaleString('en-IN', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
+    const rejection = r.status === 'rejected'
+      ? `<div class="text-sm mt-8" style="color:var(--danger);"><b>Rejection reason:</b> ${esc(REASON_LABELS[r.rejectionReason] || r.rejectionReason)}<br>${esc(r.rejectionMessage)}</div>` : '';
+    return `<tr>
+      <td>
+        <div class="row-flex"><div class="startup-logo" style="position:static;width:36px;height:36px;border-radius:10px;font-size:12px;background:#2563EB22;color:#2563EB;">${esc(logo)}</div><b>${esc(r.startupName)}</b></div>
+        <details class="mt-8"><summary class="text-sm" style="cursor:pointer;">View details</summary>
+          <div class="text-sm mt-8"><b>Investor type:</b> ${esc(r.investorType)}</div>
+          <div class="text-sm mt-8"><b>Purpose:</b> ${esc(r.purpose)}</div>
+          <div class="text-sm mt-8"><b>Experience:</b> ${esc(r.experience || 'Not provided')}</div>
+          <div class="text-sm mt-8"><b>Message to founder:</b> ${esc(r.messageToFounder || 'Not provided')}</div>
+          ${rejection}
+        </details>
+      </td>
+      <td><b>${fsCurrency(r.intendedAmount)}</b></td>
+      <td>${sent}</td>
+      <td><span class="badge ${STATUS_BADGES[r.status] || 'badge-secondary'}">${STATUS_LABELS[r.status] || esc(r.status)}</span></td>
+      <td>${actionCell(r)}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="5"><div class="empty-state"><div class="empty-icon"><i data-lucide="inbox"></i></div><h4>No requests here</h4><p>Open a startup and click "I'm Interested" to send your first request.</p><a href="browse.html" class="btn btn-primary btn-sm">Browse Startups</a></div></td></tr>`;
+  if(window.lucide) lucide.createIcons();
+}
+
+window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); loadRequests(); };
+</script>
+</body>
+</html>

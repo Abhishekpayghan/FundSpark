@@ -18,30 +18,30 @@
 
       <div class="card card-pad mb-24">
         <div class="flex items-center gap-24" style="flex-wrap:wrap;">
-          <div class="avatar" style="width:84px;height:84px;font-size:28px;border-radius:22px;">UK</div>
+          <div class="avatar" style="width:84px;height:84px;font-size:28px;border-radius:22px;" id="founderAvatar">FD</div>
           <div style="flex:1;">
-            <h3 style="margin-bottom:2px;">Unknown</h3>
-            <p class="text-sm" style="margin:0;">Founder &amp; CEO, AgroSense · Pune, Maharashtra</p>
-            <div class="flex gap-8 mt-8"><span class="badge badge-success"><i data-lucide="badge-check" style="width:12px;height:12px;"></i> Verified Founder</span><span class="badge badge-primary">3 campaigns</span></div>
+            <h3 style="margin-bottom:2px;" id="founderName">Founder Name</h3>
+            <p class="text-sm" style="margin:0;" id="founderSub">Startup Founder</p>
+            <div class="flex gap-8 mt-8"><span class="badge badge-success"><i data-lucide="badge-check" style="width:12px;height:12px;"></i> Verified Founder</span></div>
           </div>
           <button class="btn btn-outline btn-sm"><i data-lucide="camera"></i> Change Photo</button>
         </div>
       </div>
 
-      <form class="card card-pad" onsubmit="event.preventDefault(); fsToast('Profile updated successfully.','success');">
+      <form class="card card-pad" id="founderProfileForm" onsubmit="handleProfileSubmit(event)">
         <h4>Personal Information</h4>
         <div class="form-row">
-          <div class="form-group"><label>Full Name</label><input class="form-control" value="Unknown"></div>
-          <div class="form-group"><label>Email Address</label><input class="form-control" type="email" value="riya.kulkarni@fundspark.io"></div>
+          <div class="form-group"><label>Full Name</label><input id="profileFullName" class="form-control" value=""></div>
+          <div class="form-group"><label>Email Address</label><input id="profileEmail" class="form-control" type="email" value=""></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>Phone Number</label><input class="form-control" value="+91 98765 43210"></div>
-          <div class="form-group"><label>Location</label><input class="form-control" value="Pune, Maharashtra"></div>
+          <div class="form-group"><label>Phone Number</label><input id="profilePhone" class="form-control" value="" placeholder="10-digit mobile number" type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" title="Enter exactly 10 digits (numbers only)" oninput="this.value=this.value.replace(/\D/g,'').slice(0,10)"></div>
+          <div class="form-group"><label>Location</label><input id="profileLocation" class="form-control" value=""></div>
         </div>
-        <div class="form-group"><label>Bio</label><textarea class="form-control" rows="3">Agri-tech founder building affordable IoT tools for small and marginal farmers across Maharashtra.</textarea></div>
+        <div class="form-group"><label>Bio</label><textarea id="profileBio" class="form-control" rows="3" placeholder="Tell investors about yourself and your startups..."></textarea></div>
         <div class="form-row">
-          <div class="form-group"><label>LinkedIn</label><input class="form-control" placeholder="https://linkedin.com/in/..."></div>
-          <div class="form-group"><label>Website</label><input class="form-control" placeholder="https://"></div>
+          <div class="form-group"><label>LinkedIn</label><input id="profileLinkedin" class="form-control" placeholder="https://linkedin.com/in/..."></div>
+          <div class="form-group"><label>Website</label><input id="profileWebsite" class="form-control" placeholder="https://"></div>
         </div>
         <button class="btn btn-primary" type="submit"><i data-lucide="save"></i> Save Changes</button>
       </form>
@@ -50,8 +50,60 @@
 </div>
 
 <script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
 <script src="../assets/js/components.js"></script>
 <script src="../assets/js/main.js"></script>
-<script>FS_MOUNT.dashboard('founder','Unknown','UK');</script>
+<script>
+const FS_SESSION = fsInitDashboard('founder'); if(!FS_SESSION) throw new Error('redirecting to login');
+
+async function loadProfile(){
+  let user = FS_SESSION;
+  if(user.userId){
+    const fresh = await fsApiGetUser(user.userId);
+    if(fresh){ user = { ...user, ...fresh }; fsSaveSession(user); }
+  }
+  const initials = user.avatarInitials || (window.fsInitials ? fsInitials(user.fullName) : 'FD');
+  const name = user.fullName || 'Founder';
+  const loc = user.location ? `Startup Founder · ${user.location}` : 'Startup Founder';
+  
+  document.getElementById('founderAvatar').textContent = initials;
+  document.getElementById('founderName').textContent = name;
+  document.getElementById('founderSub').textContent = loc;
+  
+  document.getElementById('profileFullName').value = name;
+  document.getElementById('profileEmail').value = user.email || '';
+  document.getElementById('profilePhone').value = (user.phone || '').replace(/\D/g,'').slice(-10);
+  document.getElementById('profileLocation').value = user.location || '';
+  document.getElementById('profileBio').value = user.bio || '';
+}
+
+async function handleProfileSubmit(e){
+  e.preventDefault();
+    const phoneVal = document.getElementById('profilePhone').value.trim();
+  if(phoneVal && !/^[0-9]{10}$/.test(phoneVal)){
+    fsToast('Mobile number must be exactly 10 digits (numbers only).','error');
+    return;
+  }
+  const payload = {
+    fullName: document.getElementById('profileFullName').value.trim(),
+    email: document.getElementById('profileEmail').value.trim(),
+    phone: document.getElementById('profilePhone').value.trim(),
+    location: document.getElementById('profileLocation').value.trim(),
+    bio: document.getElementById('profileBio').value.trim()
+  };
+
+  let updated = { ...FS_SESSION, ...payload };
+  if(FS_SESSION.userId){
+    const res = await fsApiUpdateUser(FS_SESSION.userId, payload);
+    if(res && res.userId){ updated = res; }
+  }
+  fsSaveSession(updated);
+  fsToast('Profile updated successfully!','success');
+  loadProfile();
+}
+
+loadProfile();
+</script>
 </body>
 </html>

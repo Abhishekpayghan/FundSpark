@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -120,6 +120,27 @@
   </div>
 </section>
 
+<!-- ================= PLATFORM INSIGHTS ================= -->
+<section class="section" style="background:var(--card);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">Platform insights</span>
+      <h2>Campaign analytics</h2>
+      <p>Live funding and category trends based on current startup campaigns.</p>
+    </div>
+    <div class="grid-12">
+      <div class="card chart-card hover-lift reveal" style="grid-column:span 6;min-height:280px;">
+        <div class="chart-head"><h4>Top Startup Funding</h4></div>
+        <div class="chart-canvas-wrap"><canvas id="homeFundingChart"></canvas></div>
+      </div>
+      <div class="card chart-card hover-lift reveal" style="grid-column:span 6;min-height:280px;">
+        <div class="chart-head"><h4>Campaigns by Category</h4></div>
+        <div class="chart-canvas-wrap"><canvas id="homeCategoryChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ================= SUCCESS STORIES ================= -->
 <section class="section">
   <div class="container">
@@ -159,13 +180,12 @@
       <div class="card card-pad reveal" style="grid-column:span 4;">
         <div class="rating mb-16"><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i></div>
         <p class="text-sm">"FundSpark made it painless to get in front of investors who actually understood agri-tech. We closed our round in under three weeks."</p>
-        <div class="row-flex mt-16"><div class="avatar">UK</div><div><b style="font-size:14px;">Unknown</b><div class="text-sm text-muted">Founder, AgroSense</div></div></div>
+        <div class="row-flex mt-16"><div class="avatar">RK</div><div><b style="font-size:14px;">Riya Kulkarni</b><div class="text-sm text-muted">Founder, AgroSense</div></div></div>
       </div>
       <div class="card card-pad reveal" style="grid-column:span 4;">
         <div class="rating mb-16"><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i></div>
         <p class="text-sm">"The filters and startup scores save me hours of diligence. I've made five investments through the platform so far."</p>
-        <div class="row-flex mt-16"><div class="avatar">AM
-        </div><div><b style="font-size:14px;">Sanket Jadhav</b><div class="text-sm text-muted">Angel Investor</div></div></div>
+        <div class="row-flex mt-16"><div class="avatar">AM</div><div><b style="font-size:14px;">Arjun Malhotra</b><div class="text-sm text-muted">Angel Investor</div></div></div>
       </div>
       <div class="card card-pad reveal" style="grid-column:span 4;">
         <div class="rating mb-16"><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i><i data-lucide="star" style="width:14px;height:14px;fill:currentColor;"></i></div>
@@ -205,7 +225,10 @@
 <div id="fs-footer"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="assets/js/charts.js"></script>
 <script src="assets/js/data.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/auth.js"></script>
 <script src="assets/js/components.js"></script>
 <script src="assets/js/main.js"></script>
 <script>
@@ -220,7 +243,7 @@ function startupCard(s){
   <div class="card startup-card hover-lift reveal" style="grid-column:span 3;">
     <div class="startup-cover" style="background:linear-gradient(135deg, ${s.color}, var(--secondary));">
       <div class="startup-badges">
-        ${s.verified? `<span class="badge badge-verified"><i data-lucide="badge-check" style="width:12px;height:12px;"></i> Verified</span>`:''}
+        ${s.verified? `<span class="badge badge-verified"><i data-lucide="badge-check" style="width:12px;height:12px;"></i> Verified</span>`:`<span class="badge badge-warning"><i data-lucide="clock" style="width:12px;height:12px;"></i> Pending Approval</span>`}
         ${s.trending? `<span class="badge" style="background:#fff;color:var(--warning);"><i data-lucide="flame" style="width:12px;height:12px;"></i> Trending</span>`:''}
       </div>
       <div class="startup-actions">
@@ -248,7 +271,14 @@ function startupCard(s){
     </div>
   </div>`;
 }
-document.getElementById('featuredGrid').innerHTML = FS_STARTUPS.slice(0,4).map(startupCard).join('');
+function renderFeatured(startups){
+  const list = Array.isArray(startups) && startups.length ? startups : (Array.isArray(FS_STARTUPS) ? FS_STARTUPS : []);
+  const container = document.getElementById('featuredGrid');
+  if(container){
+    container.innerHTML = list.slice(0,4).map(startupCard).join('');
+  }
+}
+renderFeatured(FS_STARTUPS);
 
 document.getElementById('categoryGrid').innerHTML = FS_CATEGORIES.slice(0,8).map(c => `
   <a href="explore.html?category=${encodeURIComponent(c.name)}" class="card category-card hover-lift reveal" style="grid-column:span 3;">
@@ -257,22 +287,32 @@ document.getElementById('categoryGrid').innerHTML = FS_CATEGORIES.slice(0,8).map
     <span>${c.count} startups</span>
   </a>`).join('');
 
-const topInvestors = [
-  {name:"Sanket Jadhav", init:"SJ", invested:12, amount:2450000},
-  {name:"Divya Krishnan", init:"DK", invested:9, amount:1980000},
-  {name:"Karan Bhatt", init:"KB", invested:8, amount:1620000},
-  {name:"Wasim Sheikh", init:"WS", invested:6, amount:1150000},
-];
-document.getElementById('investorGrid').innerHTML = topInvestors.map((inv,i) => `
-  <div class="card card-pad hover-lift reveal" style="grid-column:span 3;text-align:center;">
-    <div class="avatar" style="width:56px;height:56px;font-size:18px;border-radius:16px;margin:0 auto 14px;">${inv.init}</div>
-    <h4 style="font-size:15px;margin-bottom:2px;">${inv.name}</h4>
-    <span class="badge badge-secondary">Rank #${i+1}</span>
-    <div class="funding-row mt-16" style="justify-content:center;gap:18px;">
-      <div><b style="display:block;font-family:var(--font-head);">${inv.invested}</b><span class="text-muted">Startups</span></div>
-      <div><b style="display:block;font-family:var(--font-head);">${fsCurrency(inv.amount)}</b><span class="text-muted">Invested</span></div>
-    </div>
-  </div>`).join('');
+const topInvestors = FS_INVESTORS_LIST.slice().sort((a,b)=>b.amount-a.amount).slice(0,4);
+function renderTopInvestors(){
+  document.getElementById('investorGrid').innerHTML = topInvestors.map((inv,i) => `
+    <div class="card card-pad hover-lift reveal" style="grid-column:span 3;text-align:center;">
+      <div class="avatar" style="width:56px;height:56px;font-size:18px;border-radius:16px;margin:0 auto 14px;">${inv.init}</div>
+      <h4 style="font-size:15px;margin-bottom:2px;">${inv.name}</h4>
+      <span class="badge badge-secondary">Rank #${i+1}</span>
+      <div class="funding-row mt-16" style="justify-content:center;gap:18px;">
+        <div><b style="display:block;font-family:var(--font-head);">${inv.invested}</b><span class="text-muted">Startups</span></div>
+        <div><b style="display:block;font-family:var(--font-head);">${fsCurrency(inv.amount)}</b><span class="text-muted">Invested</span></div>
+      </div>
+    </div>`).join('');
+}
+renderTopInvestors();
+
+function renderHomeCharts(){
+  const categoryCounts = FS_STARTUPS.reduce((acc,s)=>{ acc[s.category] = (acc[s.category]||0)+1; return acc; }, {});
+  const categoryLabels = Object.keys(categoryCounts);
+  const categoryValues = Object.values(categoryCounts);
+  const categoryColors = ['#2563EB','#EF4444','#22C55E','#7C3AED','#F59E0B','#0EA5E9','#A855F7','#F97316'];
+  fsDoughnut(document.getElementById('homeCategoryChart'), categoryLabels, categoryValues, categoryColors.slice(0, categoryLabels.length));
+
+  const topFunding = FS_STARTUPS.slice().sort((a,b)=>b.raised-a.raised).slice(0,6);
+  fsLineChart(document.getElementById('homeFundingChart'), topFunding.map(s=>s.name), [{ label:'Raised (₹L)', data: topFunding.map(s=>Math.round(s.raised/100000)), color:'#2563EB' }]);
+}
+renderHomeCharts();
 
 const faqs = [
   ["Is FundSpark a real investment platform?","This build is a frontend prototype created for a DBMS college mini-project. All startups, users, and transactions shown are simulated dummy data."],
@@ -287,7 +327,15 @@ document.getElementById('faqAccordion').innerHTML = faqs.map((f,i)=> `
     <div class="accordion-body"><p class="text-sm">${f[1]}</p></div>
   </div>`).join('');
 
-window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); };
+window.FS_AFTER_MOUNT = async function(){
+  if(window.lucide) lucide.createIcons();
+  const live = await fsApiGetStartups();
+  if(live && live.length){
+    document.getElementById('featuredGrid').innerHTML = live.slice(0,4).map(startupCard).join('');
+    fsAnimateProgressBars();
+    if(window.lucide) lucide.createIcons();
+  }
+};
 </script>
 </body>
 </html>

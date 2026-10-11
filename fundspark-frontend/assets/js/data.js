@@ -3,26 +3,26 @@
    ========================================================== */
 
 const FS_CATEGORIES = [
-  {name:"Artificial Intelligence", icon:"brain-circuit", count:64},
-  {name:"Healthcare", icon:"heart-pulse", count:48},
-  {name:"Agriculture", icon:"sprout", count:31},
-  {name:"Education", icon:"graduation-cap", count:39},
-  {name:"FinTech", icon:"landmark", count:57},
-  {name:"Robotics", icon:"bot", count:22},
-  {name:"Food", icon:"utensils", count:28},
-  {name:"Travel", icon:"plane", count:19},
-  {name:"Gaming", icon:"gamepad-2", count:26},
-  {name:"Cybersecurity", icon:"shield-check", count:33},
-  {name:"E-commerce", icon:"shopping-bag", count:41},
-  {name:"Renewable Energy", icon:"sun", count:35},
-  {name:"IoT", icon:"cpu", count:24},
-  {name:"SaaS", icon:"cloud", count:52},
-  {name:"Blockchain", icon:"link-2", count:29},
-  {name:"Social Impact", icon:"hand-heart", count:21}
+  {id:1, name:"Artificial Intelligence", icon:"brain-circuit", count:64},
+  {id:2, name:"Healthcare", icon:"heart-pulse", count:48},
+  {id:3, name:"Agriculture", icon:"sprout", count:31},
+  {id:4, name:"Education", icon:"graduation-cap", count:39},
+  {id:5, name:"FinTech", icon:"landmark", count:57},
+  {id:6, name:"Robotics", icon:"bot", count:22},
+  {id:7, name:"Food", icon:"utensils", count:28},
+  {id:8, name:"Travel", icon:"plane", count:19},
+  {id:9, name:"Gaming", icon:"gamepad-2", count:26},
+  {id:10, name:"Cybersecurity", icon:"shield-check", count:33},
+  {id:11, name:"E-commerce", icon:"shopping-bag", count:41},
+  {id:12, name:"Renewable Energy", icon:"sun", count:35},
+  {id:13, name:"IoT", icon:"cpu", count:24},
+  {id:14, name:"SaaS", icon:"cloud", count:52},
+  {id:15, name:"Blockchain", icon:"link-2", count:29},
+  {id:16, name:"Social Impact", icon:"hand-heart", count:21}
 ];
 
 const FS_STARTUPS = [
-  {id:1, name:"AgroSense", founder:"Unknown", category:"Agriculture", score:92, goal:2500000, raised:1875000, days:18, rating:4.8, reviews:64, verified:true, trending:true, location:"Pune, MH", color:"#22C55E", tagline:"IoT soil sensors that help small farmers cut water use by 40%.", logo:"AS"},
+  {id:1, name:"AgroSense", founder:"Riya Kulkarni", category:"Agriculture", score:92, goal:2500000, raised:1875000, days:18, rating:4.8, reviews:64, verified:true, trending:true, location:"Pune, MH", color:"#22C55E", tagline:"IoT soil sensors that help small farmers cut water use by 40%.", logo:"AS"},
   {id:2, name:"MediTrack AI", founder:"Aman Deshpande", category:"Healthcare", score:88, goal:5000000, raised:3120000, days:27, rating:4.6, reviews:41, verified:true, trending:true, location:"Bengaluru, KA", color:"#EF4444", tagline:"AI-assisted diagnostics for rural clinics without a radiologist on staff.", logo:"MT"},
   {id:3, name:"PayNest", founder:"Simran Kaur", category:"FinTech", score:95, goal:8000000, raised:7120000, days:6, rating:4.9, reviews:112, verified:true, trending:true, location:"Mumbai, MH", color:"#2563EB", tagline:"Micro-lending rails for gig workers, underwritten with UPI history.", logo:"PN"},
   {id:4, name:"ClassBridge", founder:"Neha Sharma", category:"Education", score:81, goal:1800000, raised:940000, days:34, rating:4.4, reviews:29, verified:false, trending:false, location:"Nagpur, MH", color:"#7C3AED", tagline:"Offline-first learning app for tier-3 schools with patchy internet.", logo:"CB"},
@@ -37,10 +37,10 @@ const FS_STARTUPS = [
 ];
 
 const FS_TEAM = [
-  {name:"Unknown", role:"Founder & CEO", init:"UK"},
-  {name:"Shravani", role:"CTO", init:"SH"},
-  {name:"Khushi", role:"Head of Ops", init:"KH"},
-  {name:"Aarav", role:"Lead Engineer", init:"AB"}
+  {name:"Riya Kulkarni", role:"Founder & CEO", init:"RK"},
+  {name:"Devansh Rao", role:"CTO", init:"DR"},
+  {name:"Sana Qureshi", role:"Head of Ops", init:"SQ"},
+  {name:"Farhan Ali", role:"Lead Engineer", init:"FA"}
 ];
 
 const FS_COMMENTS = [
@@ -54,7 +54,7 @@ const FS_INVESTORS_LIST = [
   {name:"Sneha Kapoor", init:"SK", amount:180000, date:"15 Jul 2026", status:"Confirmed"},
   {name:"Wasim Sheikh", init:"WS", amount:90000, date:"10 Jul 2026", status:"Pending"},
   {name:"Divya Krishnan", init:"DK", amount:400000, date:"02 Jul 2026", status:"Confirmed"},
-  {name:"Pratiksha", init:"PH", amount:60000, date:"28 Jun 2026", status:"Confirmed"}
+  {name:"Karan Bhatt", init:"KB", amount:60000, date:"28 Jun 2026", status:"Confirmed"}
 ];
 
 const FS_NOTIFICATIONS = [
@@ -66,7 +66,7 @@ const FS_NOTIFICATIONS = [
 ];
 
 const FS_USERS = [
-  {name:"Unknown", init:"UK", email:"unknown@fundspark.io", role:"Founder", status:"Active", joined:"4 Aug 2026"},
+  {name:"Riya Kulkarni", init:"RK", email:"riya.kulkarni@fundspark.io", role:"Founder", status:"Active", joined:"12 Jan 2026"},
   {name:"Arjun Malhotra", init:"AM", email:"arjun.m@fundspark.io", role:"Investor", status:"Active", joined:"03 Feb 2026"},
   {name:"Aman Deshpande", init:"AD", email:"aman.d@fundspark.io", role:"Founder", status:"Active", joined:"22 Feb 2026"},
   {name:"Sneha Kapoor", init:"SK", email:"sneha.k@fundspark.io", role:"Investor", status:"Suspended", joined:"11 Mar 2026"},

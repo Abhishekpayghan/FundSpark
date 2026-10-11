@@ -19,15 +19,6 @@ function fsToggleTheme(){
   if(window.lucide) lucide.createIcons();
 }
 
-function fsLogout(e){
-  if(e) e.preventDefault();
-  localStorage.removeItem('fs-user');
-  sessionStorage.removeItem('fs-user');
-  fsToast('Logged out successfully.','success');
-  const base = window.FS_BASE || (typeof FS_BASE !== 'undefined' ? FS_BASE : '');
-  setTimeout(()=>{ location.href = base + 'index.html'; }, 450);
-}
-
 /* ---------- Toasts ---------- */
 function fsToast(message, type='info', title=''){
   let stack = document.querySelector('.toast-stack');
@@ -133,12 +124,40 @@ document.addEventListener('click', (e)=>{
 });
 
 /* ---------- Bookmark toggle ---------- */
-function fsToggleBookmark(btn, name){
-  btn.classList.toggle('active');
-  const isActive = btn.classList.contains('active');
+async function fsToggleBookmark(btn, name, startupId){
+  // Any bookmark tied to a real startupId (i.e. a real backend wishlist action) requires
+  // a logged-in INVESTOR account — founders/admins can view but not bookmark/invest.
+  // Checked BEFORE touching the UI so a blocked click never flips the heart icon.
+  let session = null;
+  if(startupId != null){
+    session = (typeof fsRequireInvestor === 'function') ? fsRequireInvestor() : null;
+    if(!session) return null;
+  }
+
+  const isAdding = !btn.classList.contains('active');
   const icon = btn.querySelector('i');
-  if(icon){ icon.setAttribute('fill', isActive ? 'currentColor' : 'none'); }
-  fsToast(isActive ? `${name||'Startup'} added to your wishlist.` : `${name||'Startup'} removed from wishlist.`, isActive?'success':'info');
+  if(icon){ icon.setAttribute('fill', isAdding ? 'currentColor' : 'none'); }
+  btn.classList.toggle('active');
+
+  if(startupId == null){
+    fsToast(isAdding ? `${name||'Startup'} added to your wishlist.` : `${name||'Startup'} removed from your wishlist.`, isAdding?'success':'info');
+    return { bookmarked: isAdding };
+  }
+
+  try{
+    const result = await fsApiToggleWishlist(session.userId, startupId);
+    if(result){
+      fsToast(result.bookmarked ? `${name||'Startup'} added to your wishlist.` : `${name||'Startup'} removed from your wishlist.`, result.bookmarked ? 'success' : 'info');
+      return result;
+    } else {
+      throw new Error('Backend toggle failed');
+    }
+  }catch(err){
+    btn.classList.toggle('active');
+    if(icon){ icon.setAttribute('fill', btn.classList.contains('active') ? 'currentColor' : 'none'); }
+    fsToast('Unable to update wishlist on backend.', 'error');
+    return null;
+  }
 }
 
 /* ---------- Mobile nav + sidebar toggle ---------- */
@@ -148,14 +167,6 @@ document.addEventListener('click', (e)=>{
   }
   if(e.target.closest('#themeToggle')){
     fsToggleTheme();
-  }
-  if(e.target.closest('#topbarNotifications')){
-    const currentPath = window.location.pathname;
-    const target = currentPath.replace(/\/[^/]*$/, '/notifications.html');
-    window.location.href = target;
-  }
-  if(e.target.closest('[data-logout]')){
-    fsLogout(e);
   }
   if(e.target.closest('#sidebarToggle')){
     document.getElementById('sidebar')?.classList.toggle('open');

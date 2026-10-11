@@ -29,23 +29,65 @@
 </div>
 
 <script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
 <script src="../assets/js/components.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-FS_MOUNT.dashboard('admin','Pratiksha','PH');
-const reports = [
-  {item:"KhetChain", type:"Campaign", reason:"Misleading funding usage claims", by:"Wasim Sheikh", date:"29 Jul 2026"},
-  {item:"Comment on PlayForge", type:"Comment", reason:"Spam / promotional link", by:"Divya Krishnan", date:"27 Jul 2026"},
-  {item:"RoboHarvest", type:"Campaign", reason:"Duplicate business plan", by:"Admin System", date:"24 Jul 2026"},
-  {item:"User: fake_investor22", type:"User", reason:"Suspicious account activity", by:"System Flag", date:"20 Jul 2026"},
-];
-document.getElementById('reportRows').innerHTML = reports.map(r=>`
-  <tr><td><b>${r.item}</b></td><td><span class="badge badge-secondary">${r.type}</span></td><td>${r.reason}</td><td>${r.by}</td><td>${r.date}</td>
-  <td><div class="flex gap-8">
-    <button class="btn-icon" title="Dismiss" onclick="fsToast('Report dismissed.','info')"><i data-lucide="x" style="width:14px;height:14px;"></i></button>
-    <button class="btn-icon" title="Take action" onclick="fsToast('Action taken on this report.','success')"><i data-lucide="shield-alert" style="width:14px;height:14px;"></i></button>
-  </div></td></tr>`).join('');
-window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); };
+const FS_SESSION = fsInitDashboard('admin'); if(!FS_SESSION) throw new Error('redirecting to login');
+
+async function loadReports(){
+  const reports = await fsApiGetReports();
+  const list = reports || [];
+  const tbody = document.getElementById('reportRows');
+  if(!list.length){
+    tbody.innerHTML = `<tr><td colspan="6" class="text-muted" style="text-align:center;padding:22px;">No moderation reports in database. All clear!</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(r => {
+    const date = r.date ? new Date(r.date).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'}) : '—';
+    const statusBadge = r.status === 'dismissed' ? 'badge-secondary' : r.status === 'reviewed' ? 'badge-success' : 'badge-warning';
+    return `<tr>
+      <td><b>${r.item}</b></td>
+      <td><span class="badge badge-secondary">${r.type}</span></td>
+      <td>${r.reason}</td>
+      <td>${r.reportedBy}</td>
+      <td>${date} <span class="badge ${statusBadge}" style="margin-left:6px;">${r.status}</span></td>
+      <td><div class="flex gap-8">
+        ${r.status === 'pending' ? `
+          <button class="btn-icon" title="Dismiss" onclick="dismissReport(${r.id})"><i data-lucide="x" style="width:14px;height:14px;"></i></button>
+          <button class="btn-icon" title="Take action" onclick="resolveReport(${r.id})"><i data-lucide="shield-alert" style="width:14px;height:14px;"></i></button>
+        ` : '<span class="text-sm text-muted">Resolved</span>'}
+      </div></td>
+    </tr>`;
+  }).join('');
+  if(window.lucide) lucide.createIcons();
+}
+
+async function dismissReport(id){
+  const ok = await fsApiDismissReport(id);
+  if(ok){
+    fsToast('Report dismissed.', 'info');
+    loadReports();
+  } else {
+    fsToast('Could not dismiss report.', 'error');
+  }
+}
+
+async function resolveReport(id){
+  const ok = await fsApiResolveReport(id);
+  if(ok){
+    fsToast('Action taken on report.', 'success');
+    loadReports();
+  } else {
+    fsToast('Could not update report.', 'error');
+  }
+}
+
+window.FS_AFTER_MOUNT = function(){
+  if(window.lucide) lucide.createIcons();
+  loadReports();
+};
 </script>
 </body>
 </html>

@@ -24,10 +24,10 @@
 
       <div class="card card-pad mb-24">
         <h4>Notification Preferences</h4>
-        <div class="setting-row"><div><b style="font-size:14px;">Campaign milestones</b><p class="text-sm" style="margin:2px 0 0;">Get notified when a wishlist startup hits a milestone.</p></div><div class="switch on" onclick="this.classList.toggle('on')"></div></div>
-        <div class="setting-row"><div><b style="font-size:14px;">New matching startups</b><p class="text-sm" style="margin:2px 0 0;">Get notified about new campaigns in your interest areas.</p></div><div class="switch on" onclick="this.classList.toggle('on')"></div></div>
-        <div class="setting-row"><div><b style="font-size:14px;">Messages from founders</b><p class="text-sm" style="margin:2px 0 0;">Get notified for new direct messages.</p></div><div class="switch on" onclick="this.classList.toggle('on')"></div></div>
-        <div class="setting-row"><div><b style="font-size:14px;">Marketing emails</b><p class="text-sm" style="margin:2px 0 0;">Product updates and platform news.</p></div><div class="switch" onclick="this.classList.toggle('on')"></div></div>
+        <div class="setting-row"><div><b style="font-size:14px;">Campaign milestones</b><p class="text-sm" style="margin:2px 0 0;">Get notified when a wishlist startup hits a milestone.</p></div><div class="switch on" onclick="toggleSetting(this)"></div></div>
+        <div class="setting-row"><div><b style="font-size:14px;">New matching startups</b><p class="text-sm" style="margin:2px 0 0;">Get notified about new campaigns in your interest areas.</p></div><div class="switch on" onclick="toggleSetting(this)"></div></div>
+        <div class="setting-row"><div><b style="font-size:14px;">Messages from founders</b><p class="text-sm" style="margin:2px 0 0;">Get notified for new direct messages.</p></div><div class="switch on" onclick="toggleSetting(this)"></div></div>
+        <div class="setting-row"><div><b style="font-size:14px;">Marketing emails</b><p class="text-sm" style="margin:2px 0 0;">Product updates and platform news.</p></div><div class="switch" onclick="toggleSetting(this)"></div></div>
       </div>
 
       <div class="card card-pad mb-24">
@@ -37,30 +37,76 @@
 
       <div class="card card-pad mb-24">
         <h4>Change Password</h4>
-        <form onsubmit="event.preventDefault(); fsToast('Password updated successfully.','success'); this.reset();">
-          <div class="form-group"><label>Current Password</label><input class="form-control" type="password"></div>
+        <form id="changePasswordForm" onsubmit="handlePasswordChange(event)">
+          <div class="form-group"><label>Current Password</label><input id="currPass" class="form-control" type="password" required placeholder="••••••••"></div>
           <div class="form-row">
-            <div class="form-group"><label>New Password</label><input class="form-control" type="password"></div>
-            <div class="form-group"><label>Confirm New Password</label><input class="form-control" type="password"></div>
+            <div class="form-group"><label>New Password</label><input id="newPass" class="form-control" type="password" required placeholder="••••••••"></div>
+            <div class="form-group"><label>Confirm New Password</label><input id="confPass" class="form-control" type="password" required placeholder="••••••••"></div>
           </div>
           <button class="btn btn-primary" type="submit">Update Password</button>
         </form>
       </div>
 
       <div class="card card-pad" style="border-color:rgba(239,68,68,.3);">
-        <h4 style="color:var(--danger);">Danger Zone</h4>
-        <div class="setting-row"><div><b style="font-size:14px;">Delete Account</b><p class="text-sm" style="margin:2px 0 0;">Permanently remove your account and investment history.</p></div><button class="btn btn-danger btn-sm" onclick="fsToast('Account deletion simulated for this prototype.','info')">Delete</button></div>
+        <h4 style="color:var(--danger);">Danger Zone</h4><button class="btn btn-danger btn-sm" onclick="fsDeleteMyAccount()">Delete</button>
+        <div class="setting-row" style="display:block;"><div id="deleteAccountArea"></div></div>
       </div>
     </div>
   </div>
 </div>
 
 <script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/account-deletion.js"></script>
+<script src="../assets/js/auth.js"></script>
 <script src="../assets/js/components.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-FS_MOUNT.dashboard('investor','Sanket Jadhav','SJ');
+const FS_SESSION = fsInitDashboard('investor'); if(!FS_SESSION) throw new Error('redirecting to login');
+
+// async function fsDeleteMyAccount(){
+//   if(!confirm('Are you sure? This will permanently delete your account and your investment history. This cannot be undone.')) return;
+//   const ok = await fsApiDeleteUser(FS_SESSION.userId);
+//   if(ok){
+//     fsToast('Account deleted.', 'success');
+//     fsClearSession();
+//     setTimeout(()=>{ location.href = '../index.html'; }, 800);
+//   } else {
+//     fsToast('Could not delete account. Please try again.', 'error');
+//   }
+// }
+
+function toggleSetting(el){
+  el.classList.toggle('on');
+  fsToast('Preference updated.','success');
+}
+
+async function handlePasswordChange(e){
+  e.preventDefault();
+  const curr = document.getElementById('currPass').value;
+  const newP = document.getElementById('newPass').value;
+  const confP = document.getElementById('confPass').value;
+
+  if(newP !== confP){
+    fsToast('New passwords do not match.','error');
+    return;
+  }
+  if(newP.length < 4){
+    fsToast('Password must be at least 4 characters long.','error');
+    return;
+  }
+
+  const result = await fsApiUpdatePassword(FS_SESSION.userId, curr, newP);
+  if(result.success){
+    fsToast(result.message || 'Password updated successfully!','success');
+    document.getElementById('changePasswordForm').reset();
+  } else {
+    fsToast(result.message || 'Current password is incorrect.','error');
+  }
+}
+
 window.FS_AFTER_MOUNT = function(){
+  fsRenderDeletionArea(FS_SESSION, '../index.html');
   if(document.documentElement.getAttribute('data-theme')==='dark') document.getElementById('darkSwitch').classList.add('on');
 };
 </script>

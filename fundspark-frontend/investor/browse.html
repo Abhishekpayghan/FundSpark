@@ -33,18 +33,25 @@
 </div>
 
 <script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
 <script src="../assets/js/components.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-FS_MOUNT.dashboard('investor','Sanket Jadhav','SJ');
+const FS_SESSION = fsInitDashboard('investor'); if(!FS_SESSION) throw new Error('redirecting to login');
+let LIVE_STARTUPS = null;
+let WISHLIST_STARTUPS = new Set();
+let st = {search:'', cat:'All', sort:'newest'};
 function renderStars(r){let o='';for(let i=1;i<=5;i++){o+=`<i data-lucide="star" style="width:12px;height:12px;${i<=Math.round(r)?'fill:currentColor;':''}"></i>`;}return o;}
-let st = {search:"",cat:"All",sort:"newest"};
+function activeStartups(){ return LIVE_STARTUPS || FS_STARTUPS; }
 function card(s){
   const pct = fsPct(s.raised, s.goal);
+  const bookmarked = WISHLIST_STARTUPS.has(s.id);
+  const safeName = (s.name || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   return `<div class="card startup-card hover-lift" style="grid-column:span 4;">
     <div class="startup-cover" style="background:linear-gradient(135deg, ${s.color}, var(--secondary));">
-      <div class="startup-badges">${s.verified?`<span class="badge badge-verified"><i data-lucide="badge-check" style="width:12px;height:12px;"></i> Verified</span>`:''}</div>
-      <div class="startup-actions"><button class="icon-btn" onclick="fsToggleBookmark(this,'${s.name}')"><i data-lucide="heart" style="width:16px;height:16px;"></i></button></div>
+      <div class="startup-badges">${s.verified?`<span class="badge badge-verified"><i data-lucide="badge-check" style="width:12px;height:12px;"></i> Verified</span>`:`<span class="badge badge-warning"><i data-lucide="clock" style="width:12px;height:12px;"></i> Pending Approval</span>`}</div>
+      <div class="startup-actions"><button class="icon-btn${bookmarked?' active':''}" data-wishname="${safeName}" onclick="fsToggleBookmarkWithWishlist(this, this.dataset.wishname, ${s.id})"><i data-lucide="heart" style="width:16px;height:16px;${bookmarked?'fill:currentColor;':''}"></i></button></div>
       <div class="startup-logo">${s.logo}</div>
     </div>
     <div class="startup-body">
@@ -57,7 +64,7 @@ function card(s){
     </div></div>`;
 }
 function render(){
-  let list = [...FS_STARTUPS];
+  let list = [...activeStartups()];
   if(st.cat!=='All') list = list.filter(s=>s.category===st.cat);
   if(st.search) list = list.filter(s=>(s.name+s.tagline).toLowerCase().includes(st.search.toLowerCase()));
   if(st.sort==='rated') list.sort((a,b)=>b.rating-a.rating);
@@ -65,10 +72,27 @@ function render(){
   document.getElementById('browseGrid').innerHTML = list.map(card).join('') || `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon"><i data-lucide="search-x"></i></div><h4>No startups found</h4></div>`;
   if(window.lucide) lucide.createIcons();
 }
+async function loadBrowseStartups(){
+  const [live, wishlist] = await Promise.all([fsApiGetStartups(), fsApiGetWishlist(FS_SESSION.userId)]);
+  if(live){ LIVE_STARTUPS = live; fsToast('Loaded live startups from the backend.','success'); }
+  if(Array.isArray(wishlist)){
+    WISHLIST_STARTUPS = new Set(wishlist.map(w=>w.startupId));
+  }
+  render();
+}
+async function fsToggleBookmarkWithWishlist(btn, name, startupId){
+  const result = await fsToggleBookmark(btn, name, startupId);
+  if(result && result.bookmarked===true){
+    WISHLIST_STARTUPS.add(startupId);
+  } else if(result && result.bookmarked===false){
+    WISHLIST_STARTUPS.delete(startupId);
+  }
+  render();
+}
 document.getElementById('bSearch').addEventListener('input', e=>{st.search=e.target.value; render();});
 document.getElementById('bSort').addEventListener('change', e=>{st.sort=e.target.value; render();});
 document.getElementById('bCat').addEventListener('click', e=>{ const p=e.target.closest('.pill'); if(!p) return; document.querySelectorAll('#bCat .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active'); st.cat=p.getAttribute('data-c'); render();});
-window.FS_AFTER_MOUNT = render;
+window.FS_AFTER_MOUNT = loadBrowseStartups;
 </script>
 </body>
 </html>

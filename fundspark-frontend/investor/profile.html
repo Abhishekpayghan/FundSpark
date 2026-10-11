@@ -18,25 +18,28 @@
 
       <div class="card card-pad mb-24">
         <div class="flex items-center gap-24" style="flex-wrap:wrap;">
-          <div class="avatar" style="width:84px;height:84px;font-size:28px;border-radius:22px;">SJ</div>
+          <div class="avatar" style="width:84px;height:84px;font-size:28px;border-radius:22px;" id="investorAvatar">AM</div>
           <div style="flex:1;">
-            <h3 style="margin-bottom:2px;">Sanket Jadhav</h3>
-            <p class="text-sm" style="margin:0;">Angel Investor · Mumbai, Maharashtra</p>
-            <div class="flex gap-8 mt-8"><span class="badge badge-success"><i data-lucide="badge-check" style="width:12px;height:12px;"></i> Verified Investor</span><span class="badge badge-primary">12 investments</span></div>
+            <h3 style="margin-bottom:2px;" id="investorName">Investor Name</h3>
+            <p class="text-sm" style="margin:0;" id="investorSub">Angel Investor</p>
+            <div class="flex gap-8 mt-8"><span class="badge badge-success"><i data-lucide="badge-check" style="width:12px;height:12px;"></i> Verified Investor</span></div>
           </div>
           <button class="btn btn-outline btn-sm"><i data-lucide="camera"></i> Change Photo</button>
         </div>
       </div>
 
-      <form class="card card-pad" onsubmit="event.preventDefault(); fsToast('Profile updated successfully.','success');">
+      <form class="card card-pad" id="investorProfileForm" onsubmit="handleProfileSubmit(event)">
         <h4>Personal Information</h4>
         <div class="form-row">
-          <div class="form-group"><label>Full Name</label><input class="form-control" value="Sanket Jadhav"></div>
-          <div class="form-group"><label>Email Address</label><input class="form-control" type="email" value="sanket.j@fundspark.io"></div>
+          <div class="form-group"><label>Full Name</label><input id="profileFullName" class="form-control" value=""></div>
+          <div class="form-group"><label>Email Address</label><input id="profileEmail" class="form-control" type="email" value=""></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>Phone Number</label><input class="form-control" value="+91 91234 56780"></div>
-          <div class="form-group"><label>Location</label><input class="form-control" value="Mumbai, Maharashtra"></div>
+          <div class="form-group"><label>Phone Number</label><input id="profilePhone" class="form-control" value="" placeholder="10-digit mobile number" type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" title="Enter exactly 10 digits (numbers only)" oninput="this.value=this.value.replace(/\D/g,'').slice(0,10)"></div>
+          <div class="form-group"><label>Location</label><input id="profileLocation" class="form-control" value=""></div>
+        </div>
+        <div class="form-group"><label>Bio / Investment Philosophy</label>
+          <textarea id="profileBio" class="form-control" rows="3" placeholder="Tell founders about your investment background..."></textarea>
         </div>
         <div class="form-group"><label>Investment Interests</label>
           <div class="pill-nav">
@@ -51,10 +54,60 @@
 </div>
 
 <script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
 <script src="../assets/js/components.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-FS_MOUNT.dashboard('investor','Sanket Jadhav','SJ');
+const FS_SESSION = fsInitDashboard('investor'); if(!FS_SESSION) throw new Error('redirecting to login');
+
+async function loadProfile(){
+  let user = FS_SESSION;
+  if(user.userId){
+    const fresh = await fsApiGetUser(user.userId);
+    if(fresh){ user = { ...user, ...fresh }; fsSaveSession(user); }
+  }
+  const initials = user.avatarInitials || (window.fsInitials ? fsInitials(user.fullName) : 'IN');
+  const name = user.fullName || 'Investor';
+  const loc = user.location ? `Angel Investor · ${user.location}` : 'Angel Investor';
+  
+  document.getElementById('investorAvatar').textContent = initials;
+  document.getElementById('investorName').textContent = name;
+  document.getElementById('investorSub').textContent = loc;
+  
+  document.getElementById('profileFullName').value = name;
+  document.getElementById('profileEmail').value = user.email || '';
+  document.getElementById('profilePhone').value = (user.phone || '').replace(/\D/g,'').slice(-10);
+  document.getElementById('profileLocation').value = user.location || '';
+  document.getElementById('profileBio').value = user.bio || '';
+}
+
+async function handleProfileSubmit(e){
+  e.preventDefault();
+    const phoneVal = document.getElementById('profilePhone').value.trim();
+  if(phoneVal && !/^[0-9]{10}$/.test(phoneVal)){
+    fsToast('Mobile number must be exactly 10 digits (numbers only).','error');
+    return;
+  }
+  const payload = {
+    fullName: document.getElementById('profileFullName').value.trim(),
+    email: document.getElementById('profileEmail').value.trim(),
+    phone: document.getElementById('profilePhone').value.trim(),
+    location: document.getElementById('profileLocation').value.trim(),
+    bio: document.getElementById('profileBio').value.trim()
+  };
+
+  let updated = { ...FS_SESSION, ...payload };
+  if(FS_SESSION.userId){
+    const res = await fsApiUpdateUser(FS_SESSION.userId, payload);
+    if(res && res.userId){ updated = res; }
+  }
+  fsSaveSession(updated);
+  fsToast('Profile updated successfully!','success');
+  loadProfile();
+}
+
+loadProfile();
 document.querySelectorAll('.pill-nav .pill').forEach(p=>p.addEventListener('click',()=>p.classList.toggle('active')));
 </script>
 </body>

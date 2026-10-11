@@ -6,6 +6,33 @@
 <link rel="stylesheet" href="../assets/css/style.css">
 <link rel="stylesheet" href="../assets/css/dashboard.css">
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<style>
+  /* ---- Digital Equity Certificate feature (scoped to this page) ---- */
+  .cert-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(240px,1fr)); gap:16px; margin-top:14px; }
+  .cert-card{ border:1px solid var(--border); border-radius:var(--radius); padding:16px; background:var(--card);
+    box-shadow:var(--shadow-sm); cursor:pointer; transition:transform .15s, box-shadow .15s; }
+  .cert-card:hover{ transform:translateY(-3px); box-shadow:var(--shadow); }
+  .cert-card .cert-code{ font-size:11px; color:var(--text-muted); letter-spacing:.5px; }
+  .cert-card h4{ margin:6px 0 2px; font-size:15px; }
+  .cert-card .cert-pct{ font-size:22px; font-weight:700; color:var(--primary); margin-top:6px; }
+  .cert-card .cert-date{ font-size:12px; color:var(--text-muted); margin-top:4px; }
+
+  .cert-frame{ border:3px double var(--primary); border-radius:14px; padding:32px 24px; text-align:center;
+    background:linear-gradient(135deg, rgba(37,99,235,.06), rgba(124,58,237,.06)); }
+  .cert-frame .cert-title{ font-family:var(--font-head); font-size:22px; font-weight:700; color:var(--primary); }
+  .cert-frame .cert-sub{ font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1.5px; margin-top:2px; }
+  .cert-frame .cert-name{ font-size:26px; font-weight:700; margin:18px 0 2px; }
+  .cert-frame .cert-line{ font-size:14px; color:var(--text-muted); margin:16px 0; }
+  .cert-frame .cert-big-pct{ font-size:38px; font-weight:800; color:var(--secondary); margin:6px 0; }
+  .cert-frame .cert-footer{ display:flex; justify-content:space-between; margin-top:24px; font-size:11px; color:var(--text-muted); }
+
+  @media print{
+    body *{ visibility:hidden; }
+    #certModal, #certModal *{ visibility:visible; }
+    #certModal{ position:absolute; top:0; left:0; width:100%; }
+    #certModal .modal-close, #certModal .btn{ display:none; }
+  }
+</style>
 </head>
 <body data-active="investments">
 <script>const FS_BASE = "../";</script>
@@ -25,10 +52,23 @@
         <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="clock"></i></div><div class="kpi-value"><span data-count="3">0</span></div><div class="kpi-label">Pending</div></div>
       </div>
 
-      <div class="card">
+      <!-- ==== NEW: Digital Equity Certificate gallery ==== -->
+      <div class="card mt-24">
+        <div class="row-flex" style="justify-content:space-between;">
+          <h3><i data-lucide="award" style="vertical-align:-3px;"></i> My Equity Certificates</h3>
+        </div>
+        <div class="cert-grid" id="certGrid"></div>
+      </div>
+      <!-- ==== END NEW ==== -->
+
+      <div class="card mt-24">
+        <div class="row-flex" style="justify-content:space-between;margin-bottom:6px;">
+          <h3 style="margin:0;">Investment History</h3>
+        </div>
+        <p class="text-muted" style="font-size:12.5px;margin:0 0 12px;">Click <b>"View Dilution"</b> on any row to see how your ownership % in that startup has changed as new investors joined.</p>
         <div class="table-wrap">
           <table class="data-table">
-            <thead><tr><th>Startup</th><th>Category</th><th>Amount</th><th>Date</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th>Startup</th><th>Category</th><th>Amount</th><th>Date</th><th>Status</th><th>Equity Trend</th><th></th></tr></thead>
             <tbody id="invRows"></tbody>
           </table>
         </div>
@@ -37,25 +77,167 @@
   </div>
 </div>
 
+<!-- ==== NEW: Certificate detail modal ==== -->
+<div class="modal-overlay" id="certModal">
+  <div class="modal">
+    <button class="modal-close" onclick="fsCloseModal('certModal')"><i data-lucide="x"></i></button>
+    <div class="cert-frame">
+      <div class="cert-title">FundSpark</div>
+      <div class="cert-sub">Certificate of Equity</div>
+      <div class="cert-name" id="certInvestorName">—</div>
+      <div class="cert-line">holds an equity stake in</div>
+      <div class="cert-name" id="certStartupName" style="font-size:20px;">—</div>
+      <div class="cert-big-pct" id="certPct">0%</div>
+      <div class="cert-line">for an investment of <b id="certAmount">₹0</b></div>
+      <div class="cert-footer">
+        <span id="certCode">FS-CERT-000000</span>
+        <span id="certDate">—</span>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block mt-16" onclick="window.print()"><i data-lucide="printer"></i> Print / Save as PDF</button>
+  </div>
+</div>
+<!-- ==== END NEW ==== -->
+
+<!-- ==== NEW: Ownership Dilution modal ==== -->
+<div class="modal-overlay" id="dilutionModal">
+  <div class="modal" style="max-width:520px;">
+    <button class="modal-close" onclick="fsCloseModal('dilutionModal')"><i data-lucide="x"></i></button>
+    <h3><i data-lucide="trending-down" style="vertical-align:-3px;"></i> Ownership Dilution — <span id="dilutionStartupName">—</span></h3>
+    <p class="text-muted" id="dilutionSummary" style="font-size:13px;">Loading...</p>
+    <div class="chart-canvas-wrap" style="height:240px;"><canvas id="dilutionChart"></canvas></div>
+  </div>
+</div>
+<!-- ==== END NEW ==== -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
 <script src="../assets/js/components.js"></script>
 <script src="../assets/js/main.js"></script>
+<script src="../assets/js/charts.js"></script>
 <script>
-FS_MOUNT.dashboard('investor','Sanket Jadhav','SJ');
-const invData = [
-  {s:FS_STARTUPS[0], amount:250000, date:"18 Jul 2026", status:"Confirmed"},
-  {s:FS_STARTUPS[2], amount:400000, date:"09 Jul 2026", status:"Confirmed"},
-  {s:FS_STARTUPS[5], amount:90000, date:"02 Jul 2026", status:"Pending"},
-  {s:FS_STARTUPS[9], amount:180000, date:"25 Jun 2026", status:"Confirmed"},
-  {s:FS_STARTUPS[1], amount:120000, date:"14 Jun 2026", status:"Pending"},
-  {s:FS_STARTUPS[8], amount:60000, date:"02 Jun 2026", status:"Confirmed"},
-];
-document.getElementById('invRows').innerHTML = invData.map(r=>`
-  <tr><td><div class="row-flex"><div class="startup-logo" style="position:static;width:36px;height:36px;border-radius:10px;font-size:12px;background:${r.s.color}22;color:${r.s.color};">${r.s.logo}</div>${r.s.name}</div></td>
-  <td>${r.s.category}</td><td><b>${fsCurrency(r.amount)}</b></td><td>${r.date}</td>
-  <td><span class="badge ${r.status==='Confirmed'?'badge-success':'badge-warning'}">${r.status}</span></td>
-  <td><a href="../startup-details.html?id=${r.s.id}" class="btn-icon"><i data-lucide="arrow-up-right" style="width:14px;height:14px;"></i></a></td></tr>`).join('');
-window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); };
+const FS_SESSION = fsInitDashboard('investor'); if(!FS_SESSION) throw new Error('redirecting to login');
+
+function renderInvestments(rows){
+  document.getElementById('invRows').innerHTML = rows.map(r=>{
+    const logo = (r.startupName||'??').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const statusLabel = r.status.charAt(0).toUpperCase() + r.status.slice(1);
+    const date = new Date(r.investedAt).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+    return `<tr><td><div class="row-flex"><div class="startup-logo" style="position:static;width:36px;height:36px;border-radius:10px;font-size:12px;background:#2563EB22;color:#2563EB;">${logo}</div>${r.startupName}</div></td>
+    <td>${r.category}</td><td><b>${fsCurrency(r.amount)}</b></td><td>${date}</td>
+    <td><span class="badge ${r.status==='confirmed'?'badge-success':'badge-warning'}">${statusLabel}</span></td>
+    <td>
+      <button class="btn btn-outline btn-sm" style="white-space:nowrap;" onclick="openDilution(${r.startupId}, '${(r.startupName||'').replace(/'/g,"\\'")}')">
+        <i data-lucide="trending-down" style="width:13px;height:13px;"></i> View Dilution
+      </button>
+    </td>
+    <td><a href="../startup-details.html?id=${r.startupId}" class="btn-icon" title="View Startup"><i data-lucide="arrow-up-right" style="width:14px;height:14px;"></i></a></td></tr>`;
+  }).join('') || `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon"><i data-lucide="wallet"></i></div><h4>No investments yet</h4><p>Browse startups and invest to see your history here.</p><a href="browse.html" class="btn btn-primary btn-sm">Browse Startups</a></div></td></tr>`;
+  if(window.lucide) lucide.createIcons();
+}
+
+function updateInvestmentKpis(rows){
+  const confirmedRows = rows.filter(r=>r.status==='confirmed');
+  const pendingRows = rows.filter(r=>r.status==='pending');
+  const totalInvested = confirmedRows.reduce((sum,r)=>sum + Number(r.amount), 0);
+  const startupsBacked = new Set(rows.map(r=>r.startupId)).size;
+  document.querySelectorAll('[data-count]')[0].setAttribute('data-count', (totalInvested/100000).toFixed(1));
+  document.querySelectorAll('[data-count]')[1].setAttribute('data-count', startupsBacked);
+  document.querySelectorAll('[data-count]')[2].setAttribute('data-count', confirmedRows.length);
+  document.querySelectorAll('[data-count]')[3].setAttribute('data-count', pendingRows.length);
+  fsAnimateCounters();
+}
+
+async function loadMyInvestments(){
+  try{
+    const res = await fetch(`${FS_API_BASE}/investments/investor/${FS_SESSION.userId}/feed`);
+    if(!res.ok) throw new Error('bad response');
+    const rows = await res.json();
+    renderInvestments(rows);
+    updateInvestmentKpis(rows);
+    if(rows.length) fsToast('Loaded your live investments from the database.','success');
+  }catch(err){
+    console.warn('API unavailable, showing demo investments instead.', err);
+    const invData = [
+      {startupId: FS_STARTUPS[0].id, startupName: FS_STARTUPS[0].name, category: FS_STARTUPS[0].category, amount:250000, investedAt:'2026-07-18', status:'confirmed'},
+      {startupId: FS_STARTUPS[2].id, startupName: FS_STARTUPS[2].name, category: FS_STARTUPS[2].category, amount:400000, investedAt:'2026-07-09', status:'confirmed'},
+      {startupId: FS_STARTUPS[5].id, startupName: FS_STARTUPS[5].name, category: FS_STARTUPS[5].category, amount:90000, investedAt:'2026-07-02', status:'pending'},
+    ];
+    renderInvestments(invData);
+    updateInvestmentKpis(invData);
+  }
+}
+
+// ==== NEW: Digital Equity Certificate gallery ====
+let FS_CERTS = [];
+
+function renderCertificates(list){
+  const grid = document.getElementById('certGrid');
+  if(!list || !list.length){
+    grid.innerHTML = `<div class="empty-state"><div class="empty-icon"><i data-lucide="award"></i></div><h4>No certificates yet</h4><p>Certificates are issued automatically the moment your investment is confirmed.</p></div>`;
+    if(window.lucide) lucide.createIcons();
+    return;
+  }
+  grid.innerHTML = list.map((c,i)=>{
+    const date = new Date(c.issueDate).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+    return `<div class="cert-card" onclick="openCertificate(${i})">
+      <div class="cert-code">${c.certificateCode || 'Processing...'}</div>
+      <h4>${c.startupName}</h4>
+      <div class="cert-pct">${Number(c.equityPercentage).toFixed(3)}%</div>
+      <div class="cert-date">Issued ${date}</div>
+    </div>`;
+  }).join('');
+  if(window.lucide) lucide.createIcons();
+}
+
+function openCertificate(index){
+  const c = FS_CERTS[index];
+  if(!c) return;
+  document.getElementById('certInvestorName').textContent = FS_SESSION.fullName || 'Investor';
+  document.getElementById('certStartupName').textContent = c.startupName;
+  document.getElementById('certPct').textContent = Number(c.equityPercentage).toFixed(3) + '%';
+  document.getElementById('certAmount').textContent = fsCurrency(c.amountInvested);
+  document.getElementById('certCode').textContent = c.certificateCode || 'Processing...';
+  document.getElementById('certDate').textContent = new Date(c.issueDate).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+  fsOpenModal('certModal');
+}
+
+async function loadMyCertificates(){
+  const certs = await fsApiGetCertificatesByInvestor(FS_SESSION.userId);
+  FS_CERTS = certs || [];
+  renderCertificates(FS_CERTS);
+}
+// ==== END NEW ====
+
+// ==== NEW: Ownership Dilution chart ====
+async function openDilution(startupId, startupName){
+  document.getElementById('dilutionStartupName').textContent = startupName;
+  document.getElementById('dilutionSummary').textContent = 'Loading...';
+  fsOpenModal('dilutionModal');
+
+  const history = await fsApiGetEquityHistory(FS_SESSION.userId, startupId);
+
+  if(!history || !history.length){
+    document.getElementById('dilutionSummary').textContent = 'No dilution events yet — your stake in this startup hasn\'t changed since you invested.';
+    fsDestroyChart(document.getElementById('dilutionChart'));
+    return;
+  }
+
+  const labels = ['Initial'].concat(history.map(h => new Date(h.changedAt).toLocaleDateString('en-IN', {day:'2-digit', month:'short'})));
+  const data = [Number(history[0].oldEquityPercentage)].concat(history.map(h => Number(h.newEquityPercentage)));
+
+  fsLineChart(document.getElementById('dilutionChart'), labels, [{label:'Your Equity %', data, color:'#EF4444'}]);
+
+  const first = data[0];
+  const last = data[data.length - 1];
+  document.getElementById('dilutionSummary').textContent =
+    `Since your first investment, your stake has moved from ${first.toFixed(3)}% to ${last.toFixed(3)}% due to ${history.length} new investment${history.length>1?'s':''} joining this startup.`;
+}
+// ==== END NEW ====
+
+window.FS_AFTER_MOUNT = function(){ if(window.lucide) lucide.createIcons(); loadMyInvestments(); loadMyCertificates(); };
 </script>
 </body>
 </html>

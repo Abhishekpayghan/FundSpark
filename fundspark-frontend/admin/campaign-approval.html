@@ -22,31 +22,104 @@
 </div>
 
 <script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
 <script src="../assets/js/components.js"></script>
 <script src="../assets/js/main.js"></script>
 <script>
-FS_MOUNT.dashboard('admin','Pratiksha','PH');
+const FS_SESSION = fsInitDashboard('admin'); if(!FS_SESSION) throw new Error('redirecting to login');
+let pendingStartups = [];
+
+function formatStartup(c){
+  const category = c.category || c.categoryName || FS_CATEGORIES.find(x=>x.id===Number(c.categoryId))?.name || 'Unknown';
+  return {
+    id: c.startupId || c.id,
+    name: c.name,
+    founder: c.founder || c.fullName || 'Unknown',
+    category,
+    goal: c.fundingGoal || c.goal || 0,
+    submitted: c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'Today',
+    status: c.status || 'pending'
+  };
+}
+
 function render(){
   const grid = document.getElementById('approvalGrid');
-  if(FS_PENDING_CAMPAIGNS.length===0){ grid.innerHTML=''; document.getElementById('approvalEmpty').style.display='block'; return; }
+  if(pendingStartups.length===0){ grid.innerHTML=''; document.getElementById('approvalEmpty').style.display='block'; return; }
   document.getElementById('approvalEmpty').style.display='none';
-  grid.innerHTML = FS_PENDING_CAMPAIGNS.map((c,i)=>`
+  grid.innerHTML = pendingStartups.map((c,i)=>`
     <div class="card card-pad" style="grid-column:span 4;">
       <div class="flex justify-between items-center mb-16"><span class="badge badge-warning">Pending</span><span class="text-sm text-muted">${c.submitted}</span></div>
       <h4>${c.name}</h4>
       <p class="text-sm">Founder: ${c.founder}</p>
       <div class="flex justify-between text-sm mb-16"><span class="text-muted">Category</span><b>${c.category}</b></div>
       <div class="flex justify-between text-sm mb-24"><span class="text-muted">Funding Goal</span><b>${fsCurrency(c.goal)}</b></div>
-      <div class="flex gap-8">
-        <button class="btn btn-primary btn-sm btn-block" onclick="approve(${i})"><i data-lucide="check"></i> Approve</button>
-        <button class="btn btn-outline btn-sm btn-block" style="color:var(--danger);border-color:var(--danger);" onclick="reject(${i})"><i data-lucide="x"></i> Reject</button>
+            <div class="mb-16">
+        <p class="text-sm text-muted" style="margin:0 0 6px;">Verification Documents</p>
+        ${
+          (c.documents && c.documents.length)
+            ? c.documents.map(d => `<a href="${d.documentUrl}" target="_blank" class="badge badge-secondary" style="margin:0 6px 6px 0;display:inline-block;text-decoration:none;"><i data-lucide="file-check"></i> ${d.documentName}</a>`).join('')
+            : `<span class="badge badge-danger">No documents uploaded</span>`
+        }
+      </div>
+      <div class="flex gap-8" style="flex-wrap:wrap;">
+        <button type="button" class="btn btn-primary btn-sm" style="flex:1;min-width:120px;" onclick="approve(${i})"><i data-lucide="check"></i> Approve</button>
+        <button type="button" class="btn btn-outline btn-sm" style="flex:1;min-width:120px;color:var(--danger);border-color:var(--danger);" onclick="reject(${i})"><i data-lucide="x"></i> Reject</button>
       </div>
     </div>`).join('');
   if(window.lucide) lucide.createIcons();
 }
-function approve(i){ fsToast(FS_PENDING_CAMPAIGNS[i].name + ' approved and published.','success'); FS_PENDING_CAMPAIGNS.splice(i,1); render(); }
-function reject(i){ fsToast(FS_PENDING_CAMPAIGNS[i].name + ' rejected.','error'); FS_PENDING_CAMPAIGNS.splice(i,1); render(); }
-window.FS_AFTER_MOUNT = render;
+
+async function loadPendingStartups(){
+  const list = await fsApiGetPendingStartups();
+  if(list){
+    pendingStartups = list.map(formatStartup);
+    // Fetch verification documents for every pending startup up front, so
+    // render() (which is synchronous) already has everything it needs.
+    for(const s of pendingStartups){
+      s.documents = s.id ? await fsApiGetStartupDocuments(s.id) : [];
+    }
+  } else {
+    pendingStartups = FS_PENDING_CAMPAIGNS.map(c=>({
+      id: c.id || null,
+      name: c.name,
+      founder: c.founder,
+      category: c.category,
+      goal: c.goal,
+      submitted: c.submitted,
+      status: 'pending'
+    }));
+  }
+  render();
+}
+
+async function approve(i){
+  const startup = pendingStartups[i];
+  let ok = false;
+  if(startup.id){
+    ok = await fsApiVerifyStartup(startup.id);
+  }
+  if(ok){
+    fsToast(`${startup.name} approved and published.`,`success`);
+  } else {
+    fsToast(`${startup.name} approved locally.`,`success`);
+  }
+  pendingStartups.splice(i,1);
+  render();
+}
+
+async function reject(i){
+  const startup = pendingStartups[i];
+  let ok = false;
+  if(startup.id){
+    ok = await fsApiRejectStartup(startup.id);
+  }
+  fsToast(ok ? `${startup.name} rejected and removed from public listings.` : `${startup.name} rejected locally (backend offline — not saved).`, ok ? 'error' : 'info');
+  pendingStartups.splice(i,1);
+  render();
+}
+
+window.FS_AFTER_MOUNT = loadPendingStartups;
 </script>
 </body>
 </html>

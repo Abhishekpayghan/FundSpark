@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deletion Requests — FundSpark Admin</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="deletion-requests">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head"><div><h1>Account Deletion Requests</h1><p class="text-muted">Founders and investors need your approval before they can delete their account.</p></div></div>
+
+      <div class="card">
+        <div style="padding:14px 16px;display:flex;align-items:center;gap:10px;">
+          <label class="text-sm text-muted" for="delFilter">Show:</label>
+          <select id="delFilter" class="form-control" style="max-width:200px;" onchange="loadDeletionRequests()">
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+            <option value="all">All requests</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>User</th><th>Reason</th><th>Impact</th><th>Requested</th><th>Status / Action</th></tr></thead>
+            <tbody id="delRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+const FS_SESSION = fsInitDashboard('admin'); if(!FS_SESSION) throw new Error('redirecting to login');
+const DEL_BASE = `${FS_API_BASE}/deletion-requests`;
+let DEL_LIST = [];
+
+const DEL_BADGES = { pending:'badge-warning', approved:'badge-success', rejected:'badge-danger' };
+
+function esc(t){
+  return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function money(n){ return '₹' + Number(n || 0).toLocaleString('en-IN'); }
+
+function impactHTML(r){
+  const i = r.impact || {};
+  if(r.role === 'founder'){
+    const warn = Number(i.liveStartups) > 0
+      ? `<div class="text-sm mt-8" style="color:var(--danger);"><b>Warning:</b> ${i.liveStartups} live campaign(s) with ${i.investorCount} investor(s). Deleting removes the startups and their investments.</div>` : '';
+    return `<div class="text-sm">Startups: <b>${i.totalStartups}</b> (live: <b>${i.liveStartups}</b>)</div>
+            <div class="text-sm">Raised: <b>${money(i.totalRaised)}</b></div>
+            <div class="text-sm">Investors: <b>${i.investorCount}</b></div>${warn}`;
+  }
+  return `<div class="text-sm">Investments: <b>${i.investmentCount}</b></div>
+          <div class="text-sm">Total invested: <b>${money(i.totalInvested)}</b></div>`;
+}
+
+function actionHTML(r){
+  if(r.status === 'pending'){
+    return `<div class="flex gap-8">
+      <button class="btn btn-primary btn-sm" onclick="decideRequest(${r.id}, 'approved')">Approve</button>
+      <button class="btn btn-danger btn-sm" onclick="decideRequest(${r.id}, 'rejected')">Reject</button>
+    </div>`;
+  }
+  const note = r.adminNote ? `<div class="text-sm text-muted mt-8">Note: ${esc(r.adminNote)}</div>` : '';
+  return `<span class="badge ${DEL_BADGES[r.status] || 'badge-secondary'}">${esc(r.status)}</span>${note}`;
+}
+
+async function loadDeletionRequests(){
+  const status = document.getElementById('delFilter').value;
+  try{
+    const res = await fetch(`${DEL_BASE}?status=${encodeURIComponent(status)}`);
+    if(!res.ok) throw new Error('bad response');
+    DEL_LIST = await res.json();
+  }catch(err){
+    console.warn('Could not load deletion requests.', err);
+    DEL_LIST = [];
+    fsToast('Could not load requests. Is the backend running?','error');
+  }
+  renderDeletionRequests();
+}
+
+function renderDeletionRequests(){
+  document.getElementById('delRows').innerHTML = DEL_LIST.map(r => {
+    const when = new Date(r.createdAt).toLocaleString('en-IN', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
+    return `<tr>
+      <td><b style="font-size:13.5px;display:block;">${esc(r.fullName)}</b><span class="text-sm text-muted">${esc(r.email)}</span><br><span class="badge ${r.role === 'founder' ? 'badge-primary' : 'badge-secondary'}">${esc(r.role)}</span></td>
+      <td style="max-width:260px;">${esc(r.reason)}</td>
+      <td>${impactHTML(r)}</td>
+      <td>${when}</td>
+      <td>${actionHTML(r)}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="5"><div class="empty-state"><div class="empty-icon"><i data-lucide="user-x"></i></div><h4>No requests here</h4></div></td></tr>`;
+  if(window.lucide) lucide.createIcons();
+}
+
+async function decideRequest(id, decision){
+  let adminNote = '';
+  if(decision === 'rejected'){
+    adminNote = prompt('Reason for rejecting (the user will see this):');
+    if(adminNote === null) return;
+    adminNote = adminNote.trim();
+    if(adminNote.length < 5){ fsToast('Please write a short reason (at least 5 characters).','error'); return; }
+  } else {
+    if(!confirm('Approve this request? The user will then be able to delete their account permanently.')) return;
+  }
+  try{
+    const res = await fetch(`${DEL_BASE}/${id}/decision`, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ decision, adminNote })
+    });
+    const data = await res.json().catch(() => ({}));
+    if(res.ok){
+      fsToast(data.message || 'Done.','success');
+      loadDeletionRequests();
+    } else {
+      fsToast(data.message || 'Could not save the decision.','error');
+    }
+  }catch(err){
+    fsToast('Backend server not reachable.','error');
+  }
+}
+
+window.FS_AFTER_MOUNT = loadDeletionRequests;
+</script>
+</body>
+</html>
