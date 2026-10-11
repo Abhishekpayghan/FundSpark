@@ -34,7 +34,8 @@ public class FileUploadController {
             String uniqueName = UUID.randomUUID() + ext;
             Path destination = uploadPath.resolve(uniqueName);
             file.transferTo(destination);
-            String fileUrl = "http://localhost:8080/uploads/" + uniqueName;
+            String fileUrl = org.springframework.web.servlet.support.ServletUriComponentsBuilder
+                    .fromCurrentContextPath().path("/uploads/").path(uniqueName).toUriString();
             return ResponseEntity.ok(Map.of("url", fileUrl));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
