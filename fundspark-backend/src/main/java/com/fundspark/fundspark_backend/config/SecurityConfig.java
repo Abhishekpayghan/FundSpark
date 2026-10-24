@@ -23,7 +23,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173,https://*.vercel.app}")
+    @Value("${app.cors.allowed-origins:https://fundspark-fundspark-frontend.vercel.app,https://fundspark-fundspark-frontend-oy7jq3l3y-agpmaster123-1823.vercel.app}")
     private String allowedOrigins;
 
     @Bean

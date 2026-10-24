@@ -7,7 +7,7 @@
    backend server isn't running.
    ========================================================== */
 
-// Base URL for API calls. Points to your deployed Render backend, with support for local dev override.
+// Base URL for API calls. Uses the confirmed live Render backend.
 const FS_API_BASE = window.FS_API_BASE || (typeof localStorage !== 'undefined' && localStorage.getItem('FS_API_BASE')) || "https://fundspark-szj6.onrender.com/api";
 
 // category name -> brand color, used since the DB doesn't store a color per startup
