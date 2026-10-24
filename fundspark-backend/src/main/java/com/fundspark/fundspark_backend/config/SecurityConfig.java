@@ -3,6 +3,7 @@ package com.fundspark.fundspark_backend.config;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +34,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
+                                "/api/**",
                                 "/api/users/login",
                                 "/api/users/register",
                                 "/api/v1/auth/forgot-password",
