@@ -255,6 +255,7 @@ textarea.form-control{resize:vertical;min-height:110px;}
 .input-icon .form-control{padding-left:44px;}
 .form-hint{font-size:12.5px;color:var(--text-muted);margin-top:6px;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.hidden{display:none !important;}
 @media(max-width:600px){.form-row{grid-template-columns:1fr;}}
 .checkbox-row{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--text-muted);}
 .upload-box{
@@ -269,7 +270,57 @@ textarea.form-control{resize:vertical;min-height:110px;}
 .auth-visual::before{content:'';position:absolute;inset:0;background:radial-gradient(400px 260px at 30% 20%,rgba(255,255,255,.18),transparent);}
 .auth-form-wrap{display:flex;align-items:center;justify-content:center;padding:40px 24px;}
 .auth-card{width:100%;max-width:400px;}
-@media(max-width:860px){.auth-visual{display:none;}.auth-wrap{grid-template-columns:1fr;}}
+.reset-auth{background:#020b1a;}
+.reset-auth .auth-visual{background:linear-gradient(135deg,#4d6df7 0%,#6a5be7 50%,#5539d6 100%);}
+.reset-auth .auth-form-wrap{background:#020b1a;justify-content:flex-start;}
+.reset-step{max-width:760px; width:min(100%, 760px); background:transparent; border:none; box-shadow:none; padding:0;}
+.reset-step h2{font-size:clamp(2rem,2.8vw,3.1rem);color:#fff;margin-bottom:10px;line-height:1.12;}
+.reset-step .text-sm{font-size:1.05rem;color:rgba(255,255,255,.75);margin-bottom:24px;}
+.reset-step .text-sm a{color:#8bb4ff;font-weight:600;}
+.reset-step .form-group{margin-bottom:18px;}
+.reset-step label{color:#dfe7ff;font-size:0.8rem;letter-spacing:.02em;text-transform:none; margin-bottom:10px;}
+.reset-step .input-icon{position:relative;}
+.reset-step .input-icon svg{left:18px;color:#94a3b8; width:18px; height:18px;}
+.reset-step .form-control{
+  width:100%;
+  background:rgba(148,163,184,.08);
+  border:1px solid rgba(148,163,184,.22);
+  border-radius:14px;
+  color:#fff;
+  font-size:1rem;
+  padding:16px 18px 16px 48px;
+  box-shadow:none;
+}
+.reset-step .form-control::placeholder{color:#90a0bb;}
+.reset-step .form-control:focus{background:rgba(148,163,184,.10); border-color:rgba(129,140,248,.7); box-shadow:0 0 0 4px rgba(99,102,241,.18);}
+.reset-step .btn{
+  width:100%;
+  border:none;
+  border-radius:14px;
+  font-size:1.05rem;
+  font-weight:700;
+  padding:18px 18px;
+  margin-top:8px;
+  background:linear-gradient(135deg,#4f7cff,#7a68ff);
+  color:#fff;
+  box-shadow:0 18px 28px rgba(92,107,255,.3);
+}
+.reset-step .btn:hover{transform:translateY(-1px); box-shadow:0 20px 32px rgba(92,107,255,.35);}
+.reset-step .btn-secondary{background:linear-gradient(135deg,#283b62,#1e2943); color:#fff;}
+.reset-step .otp-row, .reset-step .password-row{display:grid;grid-template-columns:1fr 1fr; gap:18px;}
+.reset-step .inline-actions{display:grid;grid-template-columns:1fr 1fr; gap:18px; margin-top:16px;}
+.reset-step .inline-actions .btn{margin-top:0;}
+.reset-intro{display:flex;align-items:center;gap:14px; margin-bottom:26px;}
+.reset-intro .mark{width:60px;height:60px;border-radius:16px;background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center; color:#fff;}
+.reset-intro h2{font-size:3.1rem;margin:0;}
+.reset-intro p{font-size:1.1rem; color:rgba(255,255,255,.85); margin:0; max-width:440px;}
+.reset-success{max-width:420px; text-align:center;}
+.reset-success .category-icon{margin:0 auto 20px; width:72px;height:72px;border-radius:18px; background:rgba(34,197,94,.14); color:#4ade80; display:flex;align-items:center;justify-content:center;}
+.reset-success h2{font-size:2.4rem;color:#fff; margin-bottom:14px;}
+.reset-success p{color:rgba(255,255,255,.75); font-size:1rem; margin-bottom:18px;}
+.reset-success .btn{margin-top:8px;}
+.reset-step .back-link{display:inline-block; margin-top:12px; color:#dfe7ff; opacity:.9; }
+@media(max-width:860px){.auth-visual{display:none;}.auth-wrap{grid-template-columns:1fr;}.reset-auth .auth-form-wrap{padding:28px 18px 48px;}.reset-step{max-width:400px;}.reset-step .otp-row, .reset-step .inline-actions, .reset-step .password-row{grid-template-columns:1fr;}.}
 
 /* ---------- Tables ---------- */
 .table-wrap{overflow-x:auto;}

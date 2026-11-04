@@ -23,7 +23,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Value("${app.cors.allowed-origins:https://fundspark-fundspark-frontend.vercel.app,https://fundspark-fundspark-frontend-oy7jq3l3y-agpmaster123-1823.vercel.app}")
+    @Value("${app.cors.allowed-origins:https://fundspark-fundspark-frontend.vercel.app,https://fundspark-fundspark-frontend-oy7jq3l3y-agpmaster123-1823.vercel.app,http://localhost:8000,http://localhost:3000,http://127.0.0.1:8000,http://127.0.0.1:3000}")
     private String allowedOrigins;
 
     @Bean
@@ -61,8 +61,8 @@ public class SecurityConfig {
                 .collect(Collectors.toList());
 
         configuration.setAllowedOriginPatterns(origins);
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Origin", "Accept"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
