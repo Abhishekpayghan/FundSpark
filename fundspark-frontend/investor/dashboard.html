@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Investor Dashboard — FundSpark</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="dashboard">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head">
+        <div><h1 id="welcomeHeading">Welcome back 👋</h1><p class="text-muted">Here's an overview of your portfolio.</p></div>
+        <a href="browse.html" class="btn btn-primary"><i data-lucide="search"></i> Browse Startups</a>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="wallet"></i></div><div class="kpi-value">₹<span data-count="24.5" data-decimals="1" data-suffix="L">0</span></div><div class="kpi-label">Total Invested</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="rocket"></i></div><div class="kpi-value"><span data-count="12">0</span></div><div class="kpi-label">Startups Backed</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="heart"></i></div><div class="kpi-value"><span data-count="8">0</span></div><div class="kpi-label">Wishlist Items</div></div>
+        <div class="card kpi-card"><div class="kpi-icon"><i data-lucide="trending-up"></i></div><div class="kpi-value"><span data-count="18" data-suffix="%">0</span></div><div class="kpi-label">Avg. Campaign Growth</div></div>
+      </div>
+
+      <div class="panel-grid">
+        <div class="card chart-card"><div class="chart-head"><h4 style="margin:0;font-size:15px;">Investment Growth</h4></div><div class="chart-canvas-wrap"><canvas id="invChart"></canvas></div></div>
+        <div class="card chart-card"><div class="chart-head"><h4 style="margin:0;font-size:15px;">By Category</h4></div><div class="chart-canvas-wrap" style="height:230px;"><canvas id="catChart"></canvas></div></div>
+      </div>
+
+      <div class="mt-24">
+        <div class="chart-head"><h4 style="margin:0;">Recommended For You</h4><a href="browse.html" class="text-sm" style="color:var(--primary);font-weight:600;">See more</a></div>
+        <div class="grid-12 mt-16" id="recoGrid"></div>
+      </div>
+
+      <div class="panel-grid mt-24">
+        <div class="card card-pad">
+          <h4 style="font-size:15px;">Recently Viewed</h4>
+          <div id="recentViewed"></div>
+        </div>
+        <div class="card card-pad">
+          <h4 style="font-size:15px;">Activity Timeline</h4>
+          <div id="activityTimeline"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/charts.js"></script>
+<script>
+const FS_SESSION = fsInitDashboard('investor'); if(!FS_SESSION) throw new Error('redirecting to login');
+document.getElementById('welcomeHeading').textContent = `Welcome back, ${FS_SESSION.fullName.split(' ')[0]} 👋`;
+
+async function loadLiveKpis(){
+  try{
+    const res = await fetch(`${FS_API_BASE}/dashboard/investor/${FS_SESSION.userId}`);
+    if(!res.ok) throw new Error('bad response');
+    const kpi = await res.json();
+    document.querySelectorAll('[data-count]')[0].setAttribute('data-count', (Number(kpi.totalInvested||0)/100000).toFixed(1));
+    document.querySelectorAll('[data-count]')[1].setAttribute('data-count', kpi.startupsBacked ?? 0);
+    document.querySelectorAll('[data-count]')[2].setAttribute('data-count', kpi.wishlistCount ?? 0);
+    fsAnimateCounters();
+    fsToast('Loaded your live dashboard data.','success');
+  }catch(err){
+    console.warn('Dashboard API unavailable, showing demo numbers.', err);
+  }
+}
+
+function miniCard(s){
+  const pct = fsPct(s.raised, s.goal);
+  return `<div class="card startup-card hover-lift" style="grid-column:span 3;">
+    <div class="startup-cover" style="background:linear-gradient(135deg, ${s.color}, var(--secondary));"><div class="startup-logo">${s.logo}</div></div>
+    <div class="startup-body"><span class="startup-cat">${s.category}</span><h4 class="startup-name">${s.name}</h4>
+    <div class="progress"><div class="progress-bar" style="width:${pct}%;"></div></div>
+    <div class="startup-footer"><span class="text-sm text-muted">${pct}% funded</span><a href="../startup-details.html?id=${s.id}" class="btn btn-outline btn-sm">View</a></div></div></div>`;
+}
+
+// "Recommended For You" — real live, verified/high-scoring startups from the database,
+// not a hardcoded slice of dummy data.
+async function loadRecommended(){
+  const el = document.getElementById('recoGrid');
+  try{
+    const live = await fsApiGetStartups();
+    if(live && live.length){
+      const sorted = [...live].sort((a,b)=> (b.score||0)-(a.score||0));
+      el.innerHTML = sorted.slice(0,4).map(miniCard).join('');
+    }else{
+      el.innerHTML = FS_STARTUPS.slice(0,4).map(miniCard).join('');
+    }
+  }catch(err){
+    el.innerHTML = FS_STARTUPS.slice(0,4).map(miniCard).join('');
+  }
+  if(window.lucide) lucide.createIcons();
+}
+
+// "Recently Viewed" — real browsing history tracked in localStorage from actual visits
+// to startup-details.html (see trackRecentlyViewed there). No more fixed dummy slice.
+function loadRecentlyViewed(){
+  const el = document.getElementById('recentViewed');
+  let list = [];
+  try{ list = JSON.parse(localStorage.getItem('fs_recently_viewed_' + FS_SESSION.userId) || '[]'); }catch(e){}
+  if(!list.length){
+    el.innerHTML = `<p class="text-sm text-muted">You haven't viewed any startups yet. <a href="browse.html" style="color:var(--primary);font-weight:600;">Start browsing</a>.</p>`;
+    return;
+  }
+  el.innerHTML = list.slice(0,4).map(s=>`
+    <div class="flex items-center gap-12 mb-16"><div class="startup-logo" style="position:static;width:40px;height:40px;border-radius:10px;font-size:13px;background:${s.color}22;color:${s.color};">${s.logo}</div>
+    <div style="flex:1;"><b style="font-size:13.5px;">${s.name}</b><div class="text-sm text-muted">${s.category}</div></div>
+    <a href="../startup-details.html?id=${s.id}" class="btn-icon"><i data-lucide="arrow-up-right" style="width:14px;height:14px;"></i></a></div>`).join('');
+  if(window.lucide) lucide.createIcons();
+}
+
+// "Activity Timeline" — a real, chronologically-merged feed built from this investor's
+// actual investments, wishlist adds, and comments, all pulled live from the database.
+async function loadActivityTimeline(){
+  const el = document.getElementById('activityTimeline');
+  try{
+    const [investments, wishlist, comments] = await Promise.all([
+      fetch(`${FS_API_BASE}/investments/investor/${FS_SESSION.userId}/feed`).then(r=>r.ok?r.json():[]),
+      fetch(`${FS_API_BASE}/wishlist/investor/${FS_SESSION.userId}/feed`).then(r=>r.ok?r.json():[]),
+      fsApiGetCommentsByUser(FS_SESSION.userId)
+    ]);
+
+    let events = [];
+    (investments||[]).forEach(i => events.push({ text: `Invested ${fsCurrency(Number(i.amount))} in ${i.startupName}`, time: i.investedAt, icon: 'indian-rupee' }));
+    (wishlist||[]).forEach(w => events.push({ text: `Bookmarked ${w.name}`, time: w.addedAt, icon: 'heart' }));
+    (comments||[]).forEach(c => events.push({ text: `Commented on ${c.startupName}`, time: c.createdAt, icon: 'message-circle' }));
+
+    events.sort((a,b) => new Date(b.time) - new Date(a.time));
+
+    if(!events.length){
+      el.innerHTML = `<p class="text-sm text-muted">No activity yet — invest in or bookmark a startup to see it here.</p>`;
+      return;
+    }
+    el.innerHTML = events.slice(0,6).map(e=>{
+      const timeStr = e.time ? new Date(e.time).toLocaleDateString('en-IN',{day:'2-digit',month:'short'}) : 'Recently';
+      return `<div class="flex gap-12 mb-16"><div class="kpi-icon" style="width:34px;height:34px;flex-shrink:0;"><i data-lucide="${e.icon}" style="width:15px;height:15px;"></i></div><div><b style="font-size:13.5px;display:block;">${e.text}</b><span class="text-sm text-muted">${timeStr}</span></div></div>`;
+    }).join('');
+    if(window.lucide) lucide.createIcons();
+  }catch(err){
+    console.warn('Could not load activity timeline.', err);
+    el.innerHTML = `<p class="text-sm text-muted">Couldn't load activity — check the backend server is running.</p>`;
+  }
+}
+
+window.FS_AFTER_MOUNT = function(){
+  if(window.lucide) lucide.createIcons();
+  fsLineChart(document.getElementById('invChart'), ['Feb','Mar','Apr','May','Jun','Jul'], [{label:'Invested (₹L)', data:[3,6,10,14,19,24.5], color:'#7C3AED'}]);
+  fsDoughnut(document.getElementById('catChart'), ['FinTech','AgriTech','SaaS','Healthcare','Other'], [30,22,20,15,13], ['#2563EB','#22C55E','#7C3AED','#EF4444','#F59E0B']);
+  loadLiveKpis();
+  loadRecommended();
+  loadRecentlyViewed();
+  loadActivityTimeline();
+};
+</script>
+</body>
+</html>

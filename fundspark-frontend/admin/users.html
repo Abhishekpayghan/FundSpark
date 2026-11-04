@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Users — FundSpark Admin</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="users">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head"><div><h1>User Management</h1><p class="text-muted">View, verify, and moderate platform users.</p></div></div>
+
+      <div class="card card-pad mb-24" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+        <div class="input-icon" style="flex:1;min-width:220px;"><i data-lucide="search" style="width:17px;height:17px;"></i><input class="form-control" id="uSearch" placeholder="Search by name or email..."></div>
+        <div class="pill-nav" id="uRole">
+          <span class="pill active" data-r="All">All</span><span class="pill" data-r="Founder">Founders</span><span class="pill" data-r="Investor">Investors</span>
+        </div>
+        <select class="form-control" id="uStatus" style="max-width:160px;"><option value="">Any Status</option><option>Active</option><option>Pending</option><option>Suspended</option></select>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+            <tbody id="userRows"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="pagination"><button class="active">1</button><button>2</button><button><i data-lucide="chevron-right" style="width:15px;height:15px;"></i></button></div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+const FS_SESSION = fsInitDashboard('admin'); if(!FS_SESSION) throw new Error('redirecting to login');
+let st = {search:"",role:"All",status:""};
+let adminUsers = [];
+function statusBadge(s){
+  const st = String(s||'active').toLowerCase();
+  return st==='active' ? 'badge-success' : st==='suspended' ? 'badge-danger' : 'badge-warning';
+}
+async function loadAdminUsers(){
+  const list = await fsApiGetUsers();
+  adminUsers = list || [];
+  render();
+}
+function render(){
+  let list = adminUsers.filter(u=>{
+    if(st.role!=='All' && (u.role||'').toLowerCase() !== st.role.toLowerCase()) return false;
+    if(st.status && (u.status||'').toLowerCase() !== st.status.toLowerCase()) return false;
+    if(st.search && !( (u.fullName||u.name||'') + (u.email||'') ).toLowerCase().includes(st.search.toLowerCase())) return false;
+    return true;
+  });
+  document.getElementById('userRows').innerHTML = list.map(u=>{
+    const name = u.fullName || u.name || 'Unknown';
+    const initials = u.avatarInitials || name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const roleLabel = (u.role||'').charAt(0).toUpperCase() + (u.role||'').slice(1).toLowerCase();
+    const statusLabel = (u.status||'active').charAt(0).toUpperCase() + (u.status||'active').slice(1).toLowerCase();
+    const joined = u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'}) : (u.joined || '—');
+    return `
+    <tr><td><div class="row-flex"><div class="avatar">${initials}</div><div><b style="font-size:13.5px;display:block;">${name}</b><span class="text-sm text-muted">${u.email || ''}</span></div></div></td>
+    <td><span class="badge ${roleLabel==='Founder'?'badge-primary':'badge-secondary'}">${roleLabel}</span></td>
+    <td><span class="badge ${statusBadge(u.status)}">${statusLabel}</span></td>
+    <td>${joined}</td>
+    <td><div class="flex gap-8">
+      <button class="btn-icon" title="View Profile" onclick="fsToast('User: ${name} (${u.email})','info')"><i data-lucide="eye" style="width:14px;height:14px;"></i></button>
+      <button class="btn-icon" title="Toggle Status" onclick="fsToast('${name} status updated.','success')"><i data-lucide="shield" style="width:14px;height:14px;"></i></button>
+    </div></td></tr>`;
+  }).join('') || `<tr><td colspan="5"><div class="empty-state"><div class="empty-icon"><i data-lucide="users"></i></div><h4>No users found</h4></div></td></tr>`;
+  if(window.lucide) lucide.createIcons();
+}
+document.getElementById('uSearch').addEventListener('input', e=>{st.search=e.target.value; render();});
+document.getElementById('uStatus').addEventListener('change', e=>{st.status=e.target.value; render();});
+document.getElementById('uRole').addEventListener('click', e=>{const p=e.target.closest('.pill'); if(!p) return; document.querySelectorAll('#uRole .pill').forEach(x=>x.classList.remove('active')); p.classList.add('active'); st.role=p.getAttribute('data-r'); render();});
+window.FS_AFTER_MOUNT = loadAdminUsers;
+</script>
+</body>
+</html>

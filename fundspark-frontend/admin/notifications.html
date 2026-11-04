@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notifications — FundSpark Admin</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+<style>.notif-row{display:flex;gap:14px;padding:16px;border-radius:14px;transition:.18s ease;}
+.notif-row:hover{background:var(--gradient-soft);}
+.notif-row.unread{background:var(--gradient-soft);}
+.notif-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}</style>
+</head>
+<body data-active="notifications">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head">
+        <div><h1>Notifications</h1><p class="text-muted">Platform activity and moderation alerts.</p></div>
+        <button class="btn btn-outline btn-sm" onclick="markAllRead()">Mark all as read</button>
+      </div>
+      <div class="card card-pad" id="notifList"></div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script>
+const FS_SESSION = fsInitDashboard('admin'); if(!FS_SESSION) throw new Error('redirecting to login');
+const colorMap = {success:'#22C55E', primary:'#2563EB', secondary:'#7C3AED', warning:'#F59E0B', danger:'#EF4444'};
+
+function renderNotifs(notifs){
+  document.getElementById('notifList').innerHTML = notifs.length ? notifs.map(n=>`
+    <div class="notif-row ${n.unread?'unread':''}">
+      <div class="notif-icon" style="background:${colorMap[n.color]||'#2563EB'}22;color:${colorMap[n.color]||'#2563EB'};"><i data-lucide="${n.icon||'bell'}" style="width:18px;height:18px;"></i></div>
+      <div style="flex:1;"><b style="font-size:14px;">${n.title}</b><p class="text-sm" style="margin:4px 0;">${n.text}</p><span class="text-sm text-muted">${n.time}</span></div>
+    </div>`).join('')
+    : `<div class="empty-state"><div class="empty-icon"><i data-lucide="bell-off"></i></div><h4>No notifications</h4><p>Platform activity will show up here.</p></div>`;
+  if(window.lucide) lucide.createIcons();
+}
+
+// Admins don't have a dedicated notifications table feed in this schema (notifications
+// are per-user, tied to founders/investors), so this surfaces platform-wide activity
+// worth an admin's attention: newly pending campaigns needing approval.
+async function loadNotifications(){
+  try{
+    const res = await fetch(`${FS_API_BASE}/startups`);
+    if(!res.ok) throw new Error('bad response');
+    const rows = await res.json();
+    const pending = rows.filter(s => s.status === 'pending');
+    const notifs = pending.map(s => ({
+      title: 'Campaign awaiting approval',
+      text: `"${s.name}" was submitted and needs review.`,
+      icon: 'badge-check', color: 'warning',
+      time: s.createdAt ? new Date(s.createdAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : 'Recent',
+      unread: true
+    }));
+    renderNotifs(notifs);
+    if(notifs.length) fsToast('Loaded live pending-approval alerts from the database.','success');
+  }catch(err){
+    console.warn('API unavailable, showing demo notifications instead.', err);
+    renderNotifs([
+      {icon:"badge-check", color:"warning", title:"Campaign awaiting approval", text:"UrbanRoots was submitted and needs review.", time:"1 day ago", unread:true},
+      {icon:"flag", color:"danger", title:"New report filed", text:"A campaign was flagged for review.", time:"2 days ago", unread:true},
+      {icon:"users", color:"primary", title:"New user registered", text:"A new investor account was created.", time:"3 days ago", unread:false},
+    ]);
+  }
+}
+
+async function markAllRead(){
+  document.querySelectorAll('.notif-row').forEach(r=>r.classList.remove('unread'));
+  fsToast('All notifications marked as read.','success');
+}
+
+window.FS_AFTER_MOUNT = function(){ loadNotifications(); };
+</script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics — FundSpark Admin</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/dashboard.css">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
+</head>
+<body data-active="analytics">
+<script>const FS_BASE = "../";</script>
+<div class="app-shell">
+  <div id="fs-sidebar"></div>
+  <div class="main-area">
+    <div id="fs-topbar"></div>
+    <div class="page-wrap">
+      <div class="page-head"><div><h1>Platform Analytics</h1><p class="text-muted">Growth and engagement across FundSpark.</p></div></div>
+
+      <div class="panel-grid">
+        <div class="card chart-card"><div class="chart-head"><h4 style="margin:0;font-size:15px;">User Growth</h4></div><div class="chart-canvas-wrap"><canvas id="userGrowth"></canvas></div></div>
+        <div class="card chart-card"><div class="chart-head"><h4 style="margin:0;font-size:15px;">Founders vs Investors</h4></div><div class="chart-canvas-wrap" style="height:230px;"><canvas id="ratioChart"></canvas></div></div>
+      </div>
+
+      <div class="panel-grid mt-24">
+        <div class="card chart-card"><div class="chart-head"><h4 style="margin:0;font-size:15px;" id="volChartTitle">Monthly Funding Volume (₹ Lakhs)</h4></div><div class="chart-canvas-wrap"><canvas id="volChart"></canvas></div></div>
+        <div class="card chart-card"><div class="chart-head"><h4 style="margin:0;font-size:15px;">Category Distribution</h4></div><div class="chart-canvas-wrap" style="height:230px;"><canvas id="catChart"></canvas></div></div>
+      </div>
+
+      <div class="card card-pad mt-24">
+        <div class="flex justify-between items-center mb-16">
+          <h4 style="font-size:15px;margin:0;">Top Performing Categories</h4>
+          <span class="text-sm text-muted">Ranked by real platform capital raised</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table"><thead><tr><th>Category</th><th>Campaigns</th><th>Total Raised</th><th>Success Rate</th></tr></thead>
+          <tbody id="topCategoryRows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="../assets/js/data.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/components.js"></script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/charts.js"></script>
+<script>
+const FS_SESSION = fsInitDashboard('admin'); if(!FS_SESSION) throw new Error('redirecting to login');
+
+async function loadAnalyticsData(){
+  try{
+    const analytics = await fsApiGetAdminAnalytics();
+    if(!analytics) throw new Error('No analytics returned');
+
+    // 1. User Growth Line Chart
+    if(analytics.userGrowth && analytics.userGrowth.length){
+      const ugLabels = analytics.userGrowth.map(u => u.monthLabel);
+      let cumulative = 0;
+      const ugData = analytics.userGrowth.map(u => {
+        cumulative += Number(u.userCount || 0);
+        return cumulative;
+      });
+      fsLineChart(document.getElementById('userGrowth'), ugLabels, [{label:'Registered Users', data:ugData, color:'#2563EB'}]);
+    } else {
+      fsLineChart(document.getElementById('userGrowth'), ['Active'], [{label:'Registered Users', data:[1], color:'#2563EB'}]);
+    }
+
+    // 2. Founders vs Investors Doughnut Chart
+    const invCount = analytics.investorsCount || 0;
+    const fndCount = analytics.foundersCount || 0;
+    fsDoughnut(document.getElementById('ratioChart'), ['Investors','Founders'], [invCount, fndCount], ['#7C3AED','#2563EB']);
+
+    // 3. Monthly Funding Volume Bar Chart
+    if(analytics.monthlyFunding && analytics.monthlyFunding.length){
+      const volLabels = analytics.monthlyFunding.map(m => m.monthLabel);
+      const volData = analytics.monthlyFunding.map(m => Number((Number(m.totalAmount)/100000).toFixed(2)));
+      fsBarChart(document.getElementById('volChart'), volLabels, volData, '#22C55E');
+    } else {
+      fsBarChart(document.getElementById('volChart'), ['Current'], [0], '#22C55E');
+    }
+
+    // 4. Category Distribution Doughnut Chart
+    if(analytics.categoryDistribution && analytics.categoryDistribution.length){
+      const catLabels = analytics.categoryDistribution.map(c => c.category);
+      const catCounts = analytics.categoryDistribution.map(c => c.total);
+      const colors = ['#2563EB','#EF4444','#22C55E','#7C3AED','#F59E0B','#06B6D4','#EC4899','#8B5CF6'];
+      fsDoughnut(document.getElementById('catChart'), catLabels, catCounts, colors.slice(0, catLabels.length));
+    }
+
+    // 5. Top Performing Categories Real Data Table
+    const topTbody = document.getElementById('topCategoryRows');
+    if(analytics.topCategories && analytics.topCategories.length){
+      topTbody.innerHTML = analytics.topCategories.map(c => {
+        const rate = Math.round(Number(c.successRate || 0));
+        const badgeCls = rate >= 80 ? 'badge-success' : rate >= 50 ? 'badge-primary' : 'badge-secondary';
+        return `<tr>
+          <td><b>${c.category}</b></td>
+          <td>${c.campaigns}</td>
+          <td><b>${fsCurrency(c.totalRaised)}</b></td>
+          <td><span class="badge ${badgeCls}">${rate}%</span></td>
+        </tr>`;
+      }).join('');
+    } else {
+      topTbody.innerHTML = `<tr><td colspan="4" class="text-muted" style="text-align:center;padding:18px;">No campaign activity recorded in categories yet.</td></tr>`;
+    }
+
+  }catch(err){
+    console.error('Failed to load live analytics:', err);
+  }
+}
+
+window.FS_AFTER_MOUNT = function(){
+  if(window.lucide) lucide.createIcons();
+  loadAnalyticsData();
+};
+</script>
+</body>
+</html>
